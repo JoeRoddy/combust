@@ -1,0 +1,18 @@
+{
+  "name": "firespark",
+  "version": "1.0.2",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "bin": {
+    "firespark": "bin/firespark.js"
+  },
+  "dependencies": {
+    "shelljs": "^0.7.8",
+    "yargs": "^10.0.3"
+  }
+}
