@@ -1,7 +1,7 @@
 import firebase from "firebase";
 
 class MessageService {
-   sendMessage(convoId, message) {
+  sendMessage(convoId, message) {
     if (!convoId || !message) {
       return;
     }
@@ -13,7 +13,7 @@ class MessageService {
     db.ref("conversations/" + convoId + "/messages/" + msgId).set(true);
   }
 
-   listenForNewMessages(convoId, callback) {
+  listenForNewMessages(convoId, callback) {
     if (!convoId) {
       return;
     }
@@ -31,7 +31,7 @@ class MessageService {
       });
   }
 
-   toggleUserTyping(convoId, userId, isTyping) {
+  toggleUserTyping(convoId, userId, isTyping) {
     if (!convoId || !userId) {
       return;
     }
@@ -41,7 +41,7 @@ class MessageService {
     ref.set(isTyping);
   }
 
-   listenToConversation(convoId, callback) {
+  listenToConversation(convoId, callback) {
     if (!convoId) {
       return;
     }
@@ -54,10 +54,10 @@ class MessageService {
     });
   }
 
-   createConversation(req, callback) {
+  createConversation(req, callback) {
     //TODO:
-    }
+  }
 }
 
 export let userService = new UserService();
-
+// import { notifications } from "./notifications.js";
