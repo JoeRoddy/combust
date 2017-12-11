@@ -22,5 +22,5 @@ module.exports = (projectType, projectTitle) => {
   console.log("Installing npm dependencies");
   shell.exec(`cd ${projectTitle} && npm install --silent`);
   console.log("Installation complete");
-  console.log(`\n\nStart up your app with: cd ${projectTitle} && npm start`);
+  console.log(`\n\nStart your app with: cd ${projectTitle} && npm start`);
 };
