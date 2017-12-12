@@ -1,4 +1,6 @@
 let shell = require("shelljs");
+const ora = require("ora");
+
 let repos = {
   web: "https://github.com/JoeRoddy/combust-web.git"
 };
@@ -19,8 +21,19 @@ module.exports = (projectType, projectTitle) => {
   shell.exec(
     `git init ${projectTitle} && cd ${projectTitle} && git pull ${repoUrl}`
   );
-  console.log("Installing npm dependencies");
-  shell.exec(`cd ${projectTitle} && npm install --silent`);
-  console.log("Installation complete");
-  console.log(`\n\nStart your app with: cd ${projectTitle} && npm start`);
+  const spinner = ora("installing npm dependencies").start();
+  const {
+    stdout,
+    stderr,
+    code
+  } = shell.exec(
+    `cd ${projectTitle} && npm install --silent`,
+    { async: true, silent: true },
+    () => {
+      spinner.clear();
+      spinner.stop();
+      console.log("Installation complete");
+      console.log(`\n\nStart your app with: cd ${projectTitle} && npm start`);
+    }
+  );
 };

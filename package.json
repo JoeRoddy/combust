@@ -12,6 +12,7 @@
     "combust": "bin/combust.js"
   },
   "dependencies": {
+    "ora": "^1.3.0",
     "shelljs": "^0.7.8",
     "yargs": "^10.0.3"
   }
