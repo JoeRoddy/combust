@@ -1,6 +1,6 @@
 let shell = require("shelljs");
 let repos = {
-  web: "https://github.com/JoeRoddy/firespark-web.git"
+  web: "https://github.com/JoeRoddy/combust-web.git"
 };
 
 //eventually: mobile - web - desktop
