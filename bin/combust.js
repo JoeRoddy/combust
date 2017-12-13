@@ -3,6 +3,7 @@ var shell = require("shelljs");
 var yargs = require("yargs");
 let create = require("../command_handlers/create.js");
 let install = require("../command_handlers/install.js");
+let configure = require("../command_handlers/configure.js");
 
 require("yargs") // eslint-disable-line
   .command(
@@ -42,6 +43,9 @@ require("yargs") // eslint-disable-line
       create(projectType, argv.projectTitle);
     }
   )
+  .command("configure", "Configure firebase in your combust app", yargs => {
+    configure();
+  })
   .command("command2", "example", yargs => {
     shell.exec("echo do stuff");
   })
