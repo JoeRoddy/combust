@@ -43,7 +43,7 @@ require("yargs") // eslint-disable-line
       create(projectType, argv.projectTitle);
     }
   )
-  .command("configure", "Configure firebase in your combust app", yargs => {
+  .command("configure", "Configure firebase in your app", yargs => {
     configure();
   })
   .command("command2", "example", yargs => {
