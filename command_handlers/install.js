@@ -1,20 +1,21 @@
 let shell = require("shelljs");
 const fs = require("fs");
 
-function install(moduleName) {
+function install(moduleName, isDependency) {
   if (!moduleName)
     return console.error(
       "Err: Must specify a module: combust install moduleName\nView available modules here: http://www.example.com"
     );
   moduleName.toLowerCase();
   const firstCap = moduleName.charAt(0).toUpperCase() + moduleName.substring(1);
-  console.info(`adding: ${moduleName}`);
-
   const storePath = `src/stores/${firstCap}Store.js`;
   const servicePath = `src/service/${firstCap}Service.js`;
   const componentsPath = `src/components/combust_examples/${moduleName}`;
   if (fs.existsSync(storePath) || fs.existsSync(servicePath)) {
-    return console.info(moduleName + " already installed");
+    if (!isDependency) {
+      console.info(`${moduleName} module already installed`.red);
+    }
+    return; //dependency already installed
   }
 
   const tempFolder = "temp" + firstCap;
@@ -34,7 +35,6 @@ function install(moduleName) {
   );
   downloadDependencies(instructions.dependencies);
 
-  console.log("about to extract files for " + storePath);
   //extract files we need and move to src
   shell.exec(`mkdir -p src && mkdir -p src/stores && mkdir -p src/service`);
   shell.exec(`mv ${tempFolder}/package/Store.js ${storePath}`);
@@ -49,16 +49,24 @@ function install(moduleName) {
 
   updateCombustConfig(moduleName);
   shell.exec(`rm -rf ${tempFolder}`);
+
+  if (!isDependency) {
+    console.log(`\n${moduleName}`.yellow + ` succesfully installed!`.yellow);
+  }
+  return true;
 }
 
 function downloadDependencies(dependencies) {
   for (let dependency in dependencies) {
-    install(dependency);
+    let installCompleted = install(dependency, true);
+    if (installCompleted) {
+      console.log(dependency.yellow + " module installed as a dependency");
+    }
   }
 }
 
 function executeInstallInstructions(installInstructions) {
-  console.log("exec install called w/:", installInstructions);
+  // console.log("exec install called w/:", installInstructions);
   installInstructions &&
     Object.keys(installInstructions).forEach(path => {
       const filePath = "src/" + path;
