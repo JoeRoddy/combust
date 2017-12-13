@@ -1,5 +1,6 @@
 let shell = require("shelljs");
 const ora = require("ora");
+const colors = require("colors");
 
 let repos = {
   web: "https://github.com/JoeRoddy/combust-web.git"
@@ -21,7 +22,7 @@ module.exports = (projectType, projectTitle) => {
   shell.exec(
     `git init ${projectTitle} && cd ${projectTitle} && git pull ${repoUrl}`
   );
-  const spinner = ora("installing npm dependencies").start();
+  const spinner = ora("Installing npm dependencies").start();
   const {
     stdout,
     stderr,
@@ -32,8 +33,15 @@ module.exports = (projectType, projectTitle) => {
     () => {
       spinner.clear();
       spinner.stop();
-      console.log("Installation complete");
-      console.log(`\n\nStart your app with: cd ${projectTitle} && npm start`);
+      console.log(
+        `\nInstallation complete!`.yellow +
+          `\n\nCreated ${projectTitle} at ` +
+          `\n${process.cwd()}/${projectTitle}`.green +
+          "\n\nInstall new modules with:  " +
+          "combust install [moduleName]".cyan +
+          "\n\nStart your app with:  " +
+          `cd ${projectTitle} && npm start`.cyan
+      );
     }
   );
 };
