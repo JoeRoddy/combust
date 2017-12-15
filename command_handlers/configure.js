@@ -1,5 +1,3 @@
-const api = require("../node_modules/firebase-tools/lib/api");
-const firebaseLogin = require("../node_modules/firebase-tools/commands/login-ci.js");
 const prompt = require("prompt");
 const shell = require("shelljs");
 const fs = require("fs");
@@ -16,13 +14,6 @@ module.exports = function(dbSpecified) {
     console.log("\nSelect an application by number".yellow);
     getUserChoice(projects);
   });
-
-  //OLD WAY - might be necessary to use the api later
-  // firebaseLogin._action({}).then(result => {
-  //   const token = result.tokens.access_token;
-  //   api.setAccessToken(token);
-  //   getProjects();
-  // });
 };
 
 getProjectsCleanly = (isExecutedByUser, callback) => {
@@ -61,26 +52,6 @@ printAvailableProjects = projects => {
   projects.forEach((project, i) => {
     console.log(`(${i + 1}): ${project.id}`);
   });
-};
-
-getProjects = () => {
-  let spinner = ora("Fetching your firebase apps").start();
-
-  api
-    .getProjects()
-    .then(projects => {
-      spinner.clear();
-      spinner.stop();
-      console.log("\nSelect a Firebase project:");
-      const projectNames = projects && Object.keys(projects);
-      projectNames.forEach((proj, i) => {
-        console.log(i + ") " + proj);
-      });
-      getUserChoice(projectNames);
-    })
-    .catch(err => {
-      console.log(err);
-    });
 };
 
 function getUserChoice(projectNames, callback) {
@@ -164,3 +135,33 @@ function writeConfigToFile(newConfig) {
     }
   );
 }
+
+//OLD WAY - might be necessary to use the api later
+// const api = require("../node_modules/firebase-tools/lib/api");
+// const firebaseLogin = require("../node_modules/firebase-tools/commands/login-ci.js");
+
+// firebaseLogin._action({}).then(result => {
+//   const token = result.tokens.access_token;
+//   api.setAccessToken(token);
+//   getProjects();
+// });
+
+// getProjects = () => {
+//   let spinner = ora("Fetching your firebase apps").start();
+
+//   api
+//     .getProjects()
+//     .then(projects => {
+//       spinner.clear();
+//       spinner.stop();
+//       console.log("\nSelect a Firebase project:");
+//       const projectNames = projects && Object.keys(projects);
+//       projectNames.forEach((proj, i) => {
+//         console.log(i + ") " + proj);
+//       });
+//       getUserChoice(projectNames);
+//     })
+//     .catch(err => {
+//       console.log(err);
+//     });
+// };
