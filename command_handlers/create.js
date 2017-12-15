@@ -18,9 +18,10 @@ module.exports = projectTitle => {
   );
   getFirebaseProjects(true, (err, projects) => {
     if (!err) {
-      fs.writeFile(`${projectTitle}/src/.combust/availApps.json`, {
-        projects: JSON.stringify(projects)
-      });
+      fs.writeFile(
+        `${projectTitle}/src/.combust/availApps.json`,
+        JSON.stringify(projects)
+      );
     }
   });
 
