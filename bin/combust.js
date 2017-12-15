@@ -33,9 +33,19 @@ require("yargs") // eslint-disable-line
       create(argv.title);
     }
   )
-  .command("configure [projectId]", "Configure firebase in your app", yargs => {
-    configure();
-  })
+  .command(
+    "configure [projectId]",
+    "Configure firebase in your app",
+    yargs => {
+      yargs.positional("projectId", {
+        describe: "optional: firebase projectId",
+        default: null
+      });
+    },
+    argv => {
+      configure(argv.projectId);
+    }
+  )
   .command(
     "admin [email]",
     "Mark a user account as an admin",
