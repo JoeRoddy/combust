@@ -4,18 +4,20 @@ const colors = require("colors");
 const prompt = require("prompt");
 const firebase = require("firebase");
 const fs = require("fs");
-const { initializeFirebase } = require("../helpers/firebase_helper");
+const {
+  initializeFirebase,
+  loginWithMockAccount
+} = require("../helpers/firebase_helper");
 
 module.exports = function createAdmin(email) {
   initializeFirebase();
+  console.log("firebase initialized");
 
   if (!email) {
     return promptAcctCreation();
   }
 
-  firebase
-    .auth()
-    .signInWithEmailAndPassword("combustable@combust.com", "fakepass")
+  loginWithMockAccount()
     .then(res => {
       firebase
         .database()
@@ -38,6 +40,9 @@ module.exports = function createAdmin(email) {
             process.exit();
           }
         });
+    })
+    .catch(err => {
+      console.log("err logging in:", err);
     });
 };
 

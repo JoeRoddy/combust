@@ -32,6 +32,15 @@ const initializeFirebase = () => {
   }
 };
 
+const loginWithMockAccount = () => {
+  console.log("logging in");
+
+  return firebase
+    .auth()
+    .signInWithEmailAndPassword("combustable@combust.com", "fakepass");
+};
+
 module.exports = {
-  initializeFirebase: initializeFirebase
+  initializeFirebase,
+  loginWithMockAccount
 };
