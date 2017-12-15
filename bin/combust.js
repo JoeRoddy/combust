@@ -20,31 +20,20 @@ require("yargs") // eslint-disable-line
     }
   )
   .command(
-    "create [projectType] [projectTitle]",
-    "create project: web, mobile, desktop\nproject title (optional)",
+    "create [title]",
+    "create a project",
 
     yargs => {
-      yargs.positional("projectType", {
-        describe: "project type",
-        default: "web"
-      });
-      yargs.positional("projectTitle", {
+      yargs.positional("title", {
         describe: "project title",
         default: null
       });
     },
     argv => {
-      if (!argv.projectType) {
-        return console.error(
-          "Missing project type, specify: combust create (web | mobile) projectTitle"
-        );
-      }
-
-      let projectType = argv.projectType.toLowerCase();
-      create(projectType, argv.projectTitle);
+      create(argv.title);
     }
   )
-  .command("configure", "Configure firebase in your app", yargs => {
+  .command("configure [projectId]", "Configure firebase in your app", yargs => {
     configure();
   })
   .command(
