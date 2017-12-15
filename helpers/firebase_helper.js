@@ -1,14 +1,36 @@
 const fs = require("fs");
 const shell = require("shelljs");
 const firebase = require("firebase");
+const { nonCombustAppErr } = require("./fs_helper.js");
+
+const getFirebaseProjects = (isExecutedByUser, callback) => {
+  shell.exec("firebase list", { silent: true }, (someShit, stdout, stderr) => {
+    if (stderr && stderr.includes("please run firebase login")) {
+      return isExecutedByUser
+        ? null
+        : console.error(
+            "You must log in to the Firebase CLI first.\n\nTo install it, run: " +
+              "npm i -g firebase-tools".cyan +
+              "\n\nTo login: " +
+              "firebase login".cyan
+          );
+    } else if (stderr) {
+      return isExecutedByUser ? null : console.log(stderr);
+    }
+    return getDatabasesFromFirebaseListOutput(stdout, callback);
+  });
+};
+
+const currentDirIsCombustApp = () => {
+  return fs.existsSync("./src/.combust");
+};
 
 const getFirebaseConfig = () => {
   let f;
   try {
     f = fs.readFileSync("src/.combust/config.js").toString();
   } catch (err) {
-    throw "Not a combust app. Change directories, or create one with: " +
-      "combust create web [appName]".cyan;
+    throw nonCombustAppErr;
   }
   let config;
   try {
@@ -42,5 +64,21 @@ const loginWithMockAccount = () => {
 
 module.exports = {
   initializeFirebase,
-  loginWithMockAccount
+  loginWithMockAccount,
+  getFirebaseProjects,
+  currentDirIsCombustApp
 };
+
+function getDatabasesFromFirebaseListOutput(stdout, callback) {
+  let dbRows = stdout.split("\n").filter(row => {
+    return row.includes("│ ");
+  });
+  dbRows.splice(0, 1); //remove label row
+  let dbs = dbRows.map(row => {
+    let [name, id, role] = row.split(" │ ").map(row => {
+      return row.replace("│", "").trim();
+    });
+    return { name, id, role };
+  });
+  callback(null, dbs);
+}

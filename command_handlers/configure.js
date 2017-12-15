@@ -2,51 +2,27 @@ const prompt = require("prompt");
 const shell = require("shelljs");
 const fs = require("fs");
 const ora = require("ora");
+const { getFirebaseProjects } = require("../helpers/firebase_helper.js");
+const {
+  currentDirIsCombustApp,
+  nonCombustAppErr
+} = require("../helpers/fs_helper.js");
 
 module.exports = function(dbSpecified) {
   if (dbSpecified) {
     return setWorkingProject(dbSpecified);
   }
+  if (!currentDirIsCombustApp()) {
+    return console.error(nonCombustAppErr);
+  }
 
-  getProjectsCleanly(true, (err, projects) => {
+  getFirebaseProjects(true, (err, projects) => {
     if (!projects) return null;
     printAvailableProjects(projects);
     console.log("\nSelect an application by number".yellow);
     getUserChoice(projects);
   });
 };
-
-getProjectsCleanly = (isExecutedByUser, callback) => {
-  shell.exec("firebase list", { silent: true }, (someShit, stdout, stderr) => {
-    if (stderr && stderr.includes("please run firebase login")) {
-      return isExecutedByUser
-        ? null
-        : console.error(
-            "You must log in to the Firebase CLI first.\n\nTo install it, run: " +
-              "npm i -g firebase-tools".cyan +
-              "\n\nTo login: " +
-              "firebase login".cyan
-          );
-    } else if (stderr) {
-      return isExecutedByUser ? null : console.log(stderr);
-    }
-    return getDatabasesFromFirebaseListOutput(stdout, callback);
-  });
-};
-
-function getDatabasesFromFirebaseListOutput(stdout, callback) {
-  let dbRows = stdout.split("\n").filter(row => {
-    return row.includes("│ ");
-  });
-  dbRows.splice(0, 1); //remove label row
-  let dbs = dbRows.map(row => {
-    let [name, id, role] = row.split(" │ ").map(row => {
-      return row.replace("│", "").trim();
-    });
-    return { name, id, role };
-  });
-  callback(null, dbs);
-}
 
 printAvailableProjects = projects => {
   projects.forEach((project, i) => {
