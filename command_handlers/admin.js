@@ -2,20 +2,13 @@ let shell = require("shelljs");
 const ora = require("ora");
 const colors = require("colors");
 const prompt = require("prompt");
-
 const firebase = require("firebase");
-
-//TODO: get this from proj config
-firebase.initializeApp({
-  apiKey: "AIzaSyBmFff_SfNSBvDplVVXKLlgxRpqRh4mjjw",
-  authDomain: "firestation-e149d.firebaseapp.com",
-  databaseURL: "https://firestation-e149d.firebaseio.com",
-  projectId: "firestation-e149d",
-  storageBucket: "firestation-e149d.appspot.com",
-  messagingSenderId: "951945535511"
-});
+const fs = require("fs");
+const { initializeFirebase } = require("../helpers/firebase_helper");
 
 module.exports = function createAdmin(email) {
+  initializeFirebase();
+
   if (!email) {
     return promptAcctCreation();
   }
