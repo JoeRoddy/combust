@@ -1,6 +1,8 @@
-let shell = require("shelljs");
+const shell = require("shelljs");
+const fs = require("fs");
 const ora = require("ora");
 const colors = require("colors");
+const { getFirebaseProjects } = require("../helpers/firebase_helper.js");
 
 let repos = {
   web: "https://github.com/JoeRoddy/combust-web.git"
@@ -8,17 +10,20 @@ let repos = {
 
 //eventually: mobile - web - desktop
 module.exports = projectTitle => {
-  // if (!Object.keys(repos).includes(projectType)) {
-  //   return console.log(
-  //     `Err: Unknown project type: ${projectType} - Supported project types: web (mobile, desktop support in future)`
-  //   );
-  // }
   projectTitle = projectTitle || `myCombustApp`;
   let repoUrl = repos["web"];
   console.log("Cloning repository");
   shell.exec(
     `git init ${projectTitle} && cd ${projectTitle} && git pull ${repoUrl}`
   );
+  getFirebaseProjects(true, (err, projects) => {
+    if (!err) {
+      fs.writeFile(`${projectTitle}/src/.combust/availApps.json`, {
+        projects: JSON.stringify(projects)
+      });
+    }
+  });
+
   const spinner = ora("Installing npm dependencies").start();
   const {
     stdout,
