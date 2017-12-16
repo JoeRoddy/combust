@@ -28,11 +28,17 @@ module.exports = function createAdmin(email) {
           const results = snap.val();
           const matches = Object.keys(results);
           if (matches.length === 1) {
-            shell.exec(
-              //execute from shell to circumvent rules
-              `firebase database:update /users/serverInfo/${matches[0]}/ ../models/admin.json --confirm`
-            );
-            return process.exit();
+            fs.writeFile("./.delete_me.json", '{"isAdmin":true}', err => {
+              if (err) throw err;
+              shell.exec(
+                //execute from shell to circumvent db rules
+                `firebase database:update /users/serverInfo/${
+                  matches[0]
+                }/ ./.delete_me.json --confirm`
+              );
+              fs.unlink("./.delete_me.json");
+              return process.exit();
+            });
           } else {
             console.log(
               "Found multiple users with that email. Delete fake accounts"
