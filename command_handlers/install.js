@@ -1,5 +1,6 @@
-let shell = require("shelljs");
+const shell = require("shelljs");
 const fs = require("fs");
+const { getUserAdmins, updateData } = require("../helpers/firebase_helper");
 
 function install(moduleName, isDependency) {
   if (!moduleName)
@@ -20,11 +21,7 @@ function install(moduleName, isDependency) {
 
   const tempFolder = "temp" + firstCap;
   //download npm contents and unzip into temp directory
-  const {
-    stdout,
-    stderr,
-    code
-  } = shell.exec(
+  const { stdout, stderr, code } = shell.exec(
     `mkdir -p ${tempFolder} && cd ${tempFolder} && npm pack combust-${moduleName} | awk '{print "./"$1}' | xargs tar -xvzf $1`,
     { silent: true }
   );
@@ -46,12 +43,11 @@ function install(moduleName, isDependency) {
   //execute installation instructions
   const installInstructions = instructions ? instructions.installation : null;
   executeInstallInstructions(installInstructions);
-
   updateCombustConfig(moduleName);
   shell.exec(`rm -rf ${tempFolder}`);
-
   if (!isDependency) {
     console.log(`\n${moduleName}`.yellow + ` succesfully installed!`.yellow);
+    // process.exit();
   }
   return true;
 }
@@ -71,7 +67,6 @@ function executeInstallInstructions(installInstructions) {
     Object.keys(installInstructions).forEach(path => {
       const filePath = "src/" + path;
       let file = fs.readFileSync(filePath);
-
       const fileInstructions = installInstructions[path];
       Object.keys(fileInstructions).forEach(operation => {
         const linesToInsert = fileInstructions[operation];
@@ -157,3 +152,91 @@ function getCodeStrFromArr(codeArray) {
 }
 
 module.exports = install;
+
+/**
+ * TODO:
+ * Putting this on the back burner.
+ * This functionality would let modules have a predefined set
+ * of data that could be inserted on install
+ * ie: friends module could inject friend data.
+ * it's closish to done, but there are some security issues to worry about,
+ * plus the risk of accidentally overwriting a lot of user data
+ */
+function saveInstallData(installData, callback) {
+  if (!installData) return callback();
+
+  let finishedPromises = 0;
+  let totalPromises = 0;
+  let finishedWithTree = false;
+  console.log("installData b4:", installData);
+
+  const checkIfFinished = iterationCompleted => {
+    if (
+      (iterationCompleted ? ++finishedPromises : finishedPromises) >=
+        totalPromises &&
+      finishedWithTree
+    ) {
+      console.log("installData after:", installData);
+      updateData("/", JSON.stringify(installData));
+      return callback();
+    }
+  };
+
+  const replacePlaceholders = val => {
+    //iterate through object tree and replace
+    //placeholders like $admins w/corresponding objs
+    val &&
+      Object.keys(val).forEach(key => {
+        if (["$admins"].includes(key)) {
+          console.log("found it!");
+          totalPromises++;
+          getReplacementKeysForPlaceholder("$admins")
+            .then(keys => {
+              console.log("admin keys:", keys);
+              keys &&
+                keys.forEach(adminId => {
+                  val[adminId] = val["$admins"];
+                });
+              delete val["$admins"];
+              checkIfFinished(true);
+            })
+            .catch(err => {
+              console.log("err finding keys:", err);
+              checkIfFinished(true);
+            });
+        } else if (typeof val[key] === "object") {
+          replacePlaceholders(val[key]);
+        }
+      });
+  };
+
+  replacePlaceholders(installData);
+  finishedWithTree = true;
+  checkIfFinished();
+
+  // console.log("installdata after:", installData);
+}
+
+var replaceMentKeysByPlaceholder = {};
+
+function getReplacementKeysForPlaceholder(placeholder) {
+  const placeholders = {
+    $admins: getUserAdmins
+  };
+  console.log("called w:" + placeholder);
+
+  return new Promise((resolve, reject) => {
+    if (replaceMentKeysByPlaceholder.hasOwnProperty(placeholder)) {
+      resolve(replaceMentKeysByPlaceholder[placeholder]);
+    } else {
+      placeholders[placeholder]()
+        .then(res => {
+          resolve(res);
+        })
+        .catch(err => {
+          console.log(err);
+          reject(err);
+        });
+    }
+  });
+}

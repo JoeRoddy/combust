@@ -27,20 +27,37 @@ const currentDirIsCombustApp = () => {
   return fs.existsSync("./src/.combust");
 };
 
-const getUserAdmins = callback => {
+const getUserAdmins = () => {
+  console.log("getuseradmins called");
   initializeFirebase();
   return new Promise((resolve, reject) => {
-    return firebase
-      .database()
-      .ref("/users/serverInfo")
-      .orderByChild("isAdmin")
-      .equalTo(true)
-      .once("value")
-      .then(snap => {
-        resolve(snap.val());
+    loginWithMockAccount()
+      .then(onFulfilled => {
+        console.log("abt to return promise");
+        return firebase
+          .database()
+          .ref("/users/serverInfo")
+          .orderByChild("isAdmin")
+          .equalTo(true)
+          .once("value")
+          .then(snap => {
+            const users = snap.val();
+            users &&
+              Object.keys(users).forEach(uid => {
+                if (users[uid].DO_NOT_DELETE) {
+                  //delete combust service admins
+                  delete users[uid];
+                }
+              });
+            resolve(users ? Object.keys(users) : []);
+          })
+          .catch(err => {
+            console.log("err in .once:", err);
+            reject(err);
+          });
       })
-      .catch(err => {
-        reject(err);
+      .catch(onRejected => {
+        console.log("onReject:", onRejected);
       });
   });
 };
@@ -83,12 +100,25 @@ const loginWithMockAccount = () => {
     });
 };
 
+function updateData(dataPath, json) {
+  const localJsonFilePath = "./.delete_me.json";
+  fs.writeFile(localJsonFilePath, json, err => {
+    if (err) throw err;
+    shell.exec(
+      //execute from shell to circumvent db rules
+      `firebase database:update ${dataPath} ${localJsonFilePath} --confirm`
+    );
+    fs.unlink(localJsonFilePath);
+  });
+}
+
 module.exports = {
   initializeFirebase,
   loginWithMockAccount,
   getFirebaseProjects,
   currentDirIsCombustApp,
-  getUserAdmins
+  getUserAdmins,
+  updateData
 };
 
 function _getFirebaseConfig() {
@@ -114,8 +144,19 @@ function _createMockAccountAndLogin() {
   return auth
     .createUserWithEmailAndPassword(COMBUST_EMAIL, COMBUST_PASS)
     .then(res => {
+      _markAcctAsAdmin(res.uid);
       auth.signInWithEmailAndPassword(COMBUST_EMAIL, COMBUST_PASS);
     });
+}
+
+function _markAcctAsAdmin(uid) {
+  if (!uid) return;
+  console.log("setting combust acct as admin");
+  updateData(
+    `/users/serverInfo/${uid}/`,
+    '{"isAdmin":true, "DO_NOT_DELETE": "COMBUST_SERVICE_RECORD" }'
+  );
+  return process.exit();
 }
 
 function _getDatabasesFromFirebaseListOutput(stdout, callback) {
