@@ -2,6 +2,8 @@ const fs = require("fs");
 const shell = require("shelljs");
 const firebase = require("firebase");
 const { nonCombustAppErr } = require("./fs_helper.js");
+const COMBUST_EMAIL = "do_not_delete@combustjs.org";
+const COMBUST_PASS = "temporaryPass";
 
 const getFirebaseProjects = (isExecutedByUser, callback) => {
   shell.exec("firebase list", { silent: true }, (someShit, stdout, stderr) => {
@@ -17,7 +19,7 @@ const getFirebaseProjects = (isExecutedByUser, callback) => {
     } else if (stderr) {
       return isExecutedByUser ? null : console.log(stderr);
     }
-    return getDatabasesFromFirebaseListOutput(stdout, callback);
+    return _getDatabasesFromFirebaseListOutput(stdout, callback);
   });
 };
 
@@ -25,7 +27,71 @@ const currentDirIsCombustApp = () => {
   return fs.existsSync("./src/.combust");
 };
 
-const getFirebaseConfig = () => {
+const getUserAdmins = callback => {
+  initializeFirebase();
+  return new Promise((resolve, reject) => {
+    return firebase
+      .database()
+      .ref("/users/serverInfo")
+      .orderByChild("isAdmin")
+      .equalTo(true)
+      .once("value")
+      .then(snap => {
+        resolve(snap.val());
+      })
+      .catch(err => {
+        reject(err);
+      });
+  });
+};
+
+const initializeFirebase = () => {
+  const config = _getFirebaseConfig();
+  try {
+    firebase.initializeApp(config);
+    firebase.database(); //need this to test if working, initializeApp won't throw
+    shell.exec(`firebase use --add ${config.projectId}`, { silent: true });
+  } catch (err) {
+    throw "Firebase app could not initialize, check your configuration @ " +
+      `${process.cwd()}/src/.combust/config`.green;
+  }
+};
+
+const loginWithMockAccount = () => {
+  console.log("logging in");
+
+  //TODO: generate a pass and store it on client machine,
+  //can't have same pass on every app
+
+  //eventually, we can have them log in with their own user acct
+  //(ie: combust login xxx) and save the pass in a local environment var.
+  //this way we circumvent issues of multiple admins needing the same acct pass
+  //for DO_NOT_DELETE.
+
+  return firebase
+    .auth()
+    .signInWithEmailAndPassword(COMBUST_EMAIL, COMBUST_PASS)
+    .catch(err => {
+      if (
+        err.message ===
+        "There is no user record corresponding to this identifier. The user may have been deleted."
+      ) {
+        return _createMockAccountAndLogin();
+      } else {
+        return err.message;
+      }
+    });
+};
+
+module.exports = {
+  initializeFirebase,
+  loginWithMockAccount,
+  getFirebaseProjects,
+  currentDirIsCombustApp,
+  getUserAdmins
+};
+
+function _getFirebaseConfig() {
   let f;
   try {
     f = fs.readFileSync("src/.combust/config.js").toString();
@@ -40,36 +106,19 @@ const getFirebaseConfig = () => {
     throw "App not configured w/firebase, run; " + "combust configure".cyan;
   }
   return config;
-};
+}
 
-const initializeFirebase = () => {
-  const config = getFirebaseConfig();
-  try {
-    firebase.initializeApp(config);
-    firebase.database(); //need this to test if working, initializeApp won't throw
-    shell.exec(`firebase use --add ${config.projectId}`, { silent: true });
-  } catch (err) {
-    throw "Firebase app could not initialize, check your configuration @ " +
-      `${process.cwd()}/src/.combust/config`.green;
-  }
-};
+function _createMockAccountAndLogin() {
+  console.log("createMockAcct called");
+  const auth = firebase.auth();
+  return auth
+    .createUserWithEmailAndPassword(COMBUST_EMAIL, COMBUST_PASS)
+    .then(res => {
+      auth.signInWithEmailAndPassword(COMBUST_EMAIL, COMBUST_PASS);
+    });
+}
 
-const loginWithMockAccount = () => {
-  console.log("logging in");
-
-  return firebase
-    .auth()
-    .signInWithEmailAndPassword("combustable@combust.com", "fakepass");
-};
-
-module.exports = {
-  initializeFirebase,
-  loginWithMockAccount,
-  getFirebaseProjects,
-  currentDirIsCombustApp
-};
-
-function getDatabasesFromFirebaseListOutput(stdout, callback) {
+function _getDatabasesFromFirebaseListOutput(stdout, callback) {
   let dbRows = stdout.split("\n").filter(row => {
     return row.includes("│ ");
   });
