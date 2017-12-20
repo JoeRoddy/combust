@@ -9,14 +9,13 @@ const {
 } = require("../helpers/fs_helper.js");
 
 module.exports = function(dbSpecified) {
-  if (dbSpecified) {
-    return setWorkingProject(dbSpecified);
-  }
   if (!currentDirIsCombustApp()) {
     return console.error(nonCombustAppErr);
   }
-
-  getFirebaseProjects(true, (err, projects) => {
+  if (dbSpecified) {
+    return setWorkingProject(dbSpecified);
+  }
+  getFirebaseProjects((err, projects) => {
     if (!projects) return null;
     printAvailableProjects(projects);
     console.log("\nSelect an application by number".yellow);
