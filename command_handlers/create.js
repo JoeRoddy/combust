@@ -16,7 +16,7 @@ module.exports = projectTitle => {
   shell.exec(
     `git init ${projectTitle} && cd ${projectTitle} && git pull ${repoUrl}`
   );
-  getFirebaseProjects(true, (err, projects) => {
+  getFirebaseProjects((err, projects) => {
     if (!err) {
       fs.writeFile(
         `${projectTitle}/src/.combust/availApps.json`,
@@ -26,11 +26,7 @@ module.exports = projectTitle => {
   });
 
   const spinner = ora("Installing npm dependencies").start();
-  const {
-    stdout,
-    stderr,
-    code
-  } = shell.exec(
+  const { stdout, stderr, code } = shell.exec(
     `cd ${projectTitle} && npm install --silent`,
     { async: true, silent: true },
     () => {

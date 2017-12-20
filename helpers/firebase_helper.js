@@ -5,19 +5,17 @@ const { nonCombustAppErr } = require("./fs_helper.js");
 const COMBUST_EMAIL = "do_not_delete@combustjs.org";
 const COMBUST_PASS = "temporaryPass";
 
-const getFirebaseProjects = (isExecutedByUser, callback) => {
+const getFirebaseProjects = callback => {
   shell.exec("firebase list", { silent: true }, (someShit, stdout, stderr) => {
     if (stderr && stderr.includes("please run firebase login")) {
-      return isExecutedByUser
-        ? null
-        : console.error(
-            "You must log in to the Firebase CLI first.\n\nTo install it, run: " +
-              "npm i -g firebase-tools".cyan +
-              "\n\nTo login: " +
-              "firebase login".cyan
-          );
+      return console.error(
+        "You must log in to the Firebase CLI first.\n\nTo install it, run: " +
+          "npm i -g firebase-tools".cyan +
+          "\n\nTo login: " +
+          "firebase login".cyan
+      );
     } else if (stderr) {
-      return isExecutedByUser ? null : console.log(stderr);
+      return console.log(stderr);
     }
     return _getDatabasesFromFirebaseListOutput(stdout, callback);
   });
@@ -28,7 +26,6 @@ const currentDirIsCombustApp = () => {
 };
 
 const getUserAdmins = () => {
-  console.log("getuseradmins called");
   initializeFirebase();
   return new Promise((resolve, reject) => {
     loginWithMockAccount()
@@ -75,8 +72,6 @@ const initializeFirebase = () => {
 };
 
 const loginWithMockAccount = () => {
-  console.log("logging in");
-
   //TODO: generate a pass and store it on client machine,
   //can't have same pass on every app
 
@@ -139,7 +134,6 @@ function _getFirebaseConfig() {
 }
 
 function _createMockAccountAndLogin() {
-  console.log("createMockAcct called");
   const auth = firebase.auth();
   return auth
     .createUserWithEmailAndPassword(COMBUST_EMAIL, COMBUST_PASS)
@@ -151,7 +145,6 @@ function _createMockAccountAndLogin() {
 
 function _markAcctAsAdmin(uid) {
   if (!uid) return;
-  console.log("setting combust acct as admin");
   updateData(
     `/users/serverInfo/${uid}/`,
     '{"isAdmin":true, "DO_NOT_DELETE": "COMBUST_SERVICE_RECORD" }'
