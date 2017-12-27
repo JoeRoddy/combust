@@ -2,9 +2,10 @@
 var shell = require("shelljs");
 var yargs = require("yargs");
 let create = require("../command_handlers/create.js");
-let install = require("../command_handlers/install.js");
+let { install } = require("../command_handlers/install.js");
 let configure = require("../command_handlers/configure.js");
 let createAdmin = require("../command_handlers/admin.js");
+let generate = require("../command_handlers/generate.js");
 
 require("yargs") // eslint-disable-line
   .command(
@@ -57,6 +58,31 @@ require("yargs") // eslint-disable-line
     },
     argv => {
       createAdmin(argv.email);
+    }
+  )
+  .command(
+    "generate [moduleTitle] [field:dataType:defaultValue]",
+    "create a new firebase service with a list of fields and their defaults",
+    yargs => {
+      yargs.positional("moduleTitle", {
+        describe: "module title",
+        default: null
+      });
+      yargs.positional("field:defaultValue", {
+        describe: "ex: firstName:'' score:0",
+        default: null
+      });
+    },
+    argv => {
+      if (!argv.moduleTitle) {
+        return console.error(
+          "Missing title, specify: generate [moduleTitle] [field:dataType:defaultValue]"
+        );
+      }
+      const fields = [argv["field:dataType:defaultValue"]].concat(
+        argv._.slice(1)
+      );
+      generate(argv.moduleTitle, fields);
     }
   )
   .command("command2", "example", yargs => {

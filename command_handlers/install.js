@@ -47,7 +47,6 @@ function install(moduleName, isDependency) {
   shell.exec(`rm -rf ${tempFolder}`);
   if (!isDependency) {
     console.log(`\n${moduleName}`.yellow + ` succesfully installed!`.yellow);
-    // process.exit();
   }
   return true;
 }
@@ -151,7 +150,10 @@ function getCodeStrFromArr(codeArray) {
   return codeStr;
 }
 
-module.exports = install;
+module.exports = {
+  install,
+  executeInstallInstructions
+};
 
 /**
  * TODO:
