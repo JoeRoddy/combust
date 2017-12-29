@@ -115,10 +115,22 @@ const replaceTitleOccurrences = function(moduleTitle, data) {
 
 const insertFieldsAndDefaultVals = function(fileData, fieldsAndVals) {
   const fieldsPattern = "const fields = {};";
+  const defaultsPattern = "let defaultFields = {};";
   let fields = {};
+  let defaults = {};
   fieldsAndVals.forEach(fieldObj => {
     fields[fieldObj.fieldName] = fieldObj.dataType;
+    if (fieldObj.defaultValue) {
+      defaults[fieldObj.fieldName] = fieldObj.defaultValue;
+    }
   });
+
+  fileData = replaceAll(
+    fileData,
+    defaultsPattern,
+    "let defaultFields = " + JSON.stringify(defaults)
+  );
+
   return replaceAll(
     fileData,
     fieldsPattern,
