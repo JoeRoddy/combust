@@ -1,6 +1,10 @@
+const os = require("os");
+
 const shell = require("shelljs");
 const fs = require("fs");
 const { getUserAdmins, updateData } = require("../helpers/firebase_helper");
+const { mkdirSync } = require("../helpers/fs_helper");
+const tar = require("tar");
 
 function install(moduleName, isDependency) {
   if (!moduleName)
@@ -8,46 +12,58 @@ function install(moduleName, isDependency) {
       "Err: Must specify a module: combust install moduleName\nView available modules here: http://www.example.com"
     );
   moduleName.toLowerCase();
+
   const firstCap = moduleName.charAt(0).toUpperCase() + moduleName.substring(1);
   const storePath = `src/stores/${firstCap}Store.js`;
   const servicePath = `src/service/${firstCap}Service.js`;
   const componentsPath = `src/components/combust_examples/${moduleName}`;
+
   if (fs.existsSync(storePath) || fs.existsSync(servicePath)) {
     if (!isDependency) {
       console.info(`${moduleName} module already installed`.red);
     }
     return; //dependency already installed
   }
+  const tempFolder = fs.mkdtempSync(os.tmpdir());
 
-  const tempFolder = "temp" + firstCap;
   //download npm contents and unzip into temp directory
   const { stdout, stderr, code } = shell.exec(
-    `mkdir -p ${tempFolder} && cd ${tempFolder} && npm pack combust-${moduleName} | awk '{print "./"$1}' | xargs tar -xvzf $1`,
+    `npm pack combust-${moduleName}`,
     { silent: true }
   );
   stderr && console.error(stderr);
+  tar
+    .extract({
+      file: stdout.trim()
+    })
+    .then(() => {
+      shell.exec(`mv package ${tempFolder}`);
+      const instructions = JSON.parse(
+        fs.readFileSync(`${tempFolder}/package/combust.json`, "utf8")
+      );
+      downloadDependencies(instructions.dependencies);
 
-  const instructions = JSON.parse(
-    fs.readFileSync(`${tempFolder}/package/combust.json`, "utf8")
-  );
-  downloadDependencies(instructions.dependencies);
+      //extract files we need and move to src
+      mkdirSync("src/stores");
+      mkdirSync("src/service");
+      mkdirSync(componentsPath);
+      shell.exec(`mv ${tempFolder}/package/Store.js ${storePath}`);
+      shell.exec(`mv ${tempFolder}/package/Service.js ${servicePath}`);
+      shell.exec(`mv ${tempFolder}/package/components/* ${componentsPath}`);
 
-  //extract files we need and move to src
-  shell.exec(`mkdir -p src && mkdir -p src/stores && mkdir -p src/service`);
-  shell.exec(`mv ${tempFolder}/package/Store.js ${storePath}`);
-  shell.exec(`mv ${tempFolder}/package/Service.js ${servicePath}`);
-  shell.exec(
-    `mkdir -p ${componentsPath} && mv ${tempFolder}/package/components/* ${componentsPath}`
-  );
-
-  //execute installation instructions
-  const installInstructions = instructions ? instructions.installation : null;
-  executeInstallInstructions(installInstructions);
-  updateCombustConfig(moduleName);
-  shell.exec(`rm -rf ${tempFolder}`);
-  if (!isDependency) {
-    console.log(`\n${moduleName}`.yellow + ` succesfully installed!`.yellow);
-  }
+      //execute installation instructions
+      const installInstructions = instructions
+        ? instructions.installation
+        : null;
+      executeInstallInstructions(installInstructions);
+      updateCombustConfig(moduleName);
+      shell.exec(`rm -rf ${tempFolder}`);
+      if (!isDependency) {
+        console.log(
+          `\n${moduleName}`.yellow + ` succesfully installed!`.yellow
+        );
+      }
+    });
   return true;
 }
 
