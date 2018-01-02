@@ -1,5 +1,4 @@
 const os = require("os");
-
 const shell = require("shelljs");
 const fs = require("fs");
 const { getUserAdmins, updateData } = require("../helpers/firebase_helper");
@@ -24,19 +23,20 @@ function install(moduleName, isDependency) {
     }
     return; //dependency already installed
   }
-  const tempFolder = fs.mkdtempSync(os.tmpdir());
+  const tempFolder = fs.mkdtempSync(os.tmpdir() + "/");
 
   //download npm contents and unzip into temp directory
-  const { stdout, stderr, code } = shell.exec(
-    `npm pack combust-${moduleName}`,
-    { silent: true }
-  );
+  const { stdout, stderr } = shell.exec(`npm pack combust-${moduleName}`, {
+    silent: true
+  });
   stderr && console.error(stderr);
+  const tgzFile = stdout.trim();
   tar
     .extract({
-      file: stdout.trim()
+      file: tgzFile
     })
     .then(() => {
+      fs.unlink(tgzFile);
       shell.exec(`mv package ${tempFolder}`);
       const instructions = JSON.parse(
         fs.readFileSync(`${tempFolder}/package/combust.json`, "utf8")
