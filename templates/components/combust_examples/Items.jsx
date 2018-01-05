@@ -26,9 +26,7 @@ export default class Items extends Component {
           Object.keys(items).map(itemId => {
             return (
               <Link key={itemId} to={"/item/" + itemId}>
-                <div>
-                  <span>{itemId}</span>
-                </div>
+                <div>{items[itemId] && <span>{itemId}</span>}</div>
               </Link>
             );
           })}

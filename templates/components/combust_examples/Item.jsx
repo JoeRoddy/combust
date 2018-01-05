@@ -14,14 +14,21 @@ const Item = props => {
   return (
     <div className="Item uk-padding">
       {item && (
-        <div className="Item-details">
-          <div>itemId:{" " + itemId}</div>
-          <div>createdAt: {" " + new Date(item.createdAt).toString()}</div>
+        <div className="Item-details uk-margin-bottom">
+          <div>
+            <b>itemId:</b>
+            {" " + itemId}
+          </div>
+          <div>
+            <b>createdAt:</b>
+            {" " + new Date(item.createdAt).toString()}
+          </div>
           {fields &&
             Object.keys(fields).map(field => {
               return (
                 <div key={field}>
-                  {field}:{" " + item[field]}
+                  <b>{field}:</b>
+                  {" " + item[field]}
                 </div>
               );
             })}

@@ -71,7 +71,7 @@ class ItemStore {
     let usersItems = this.itemIdsByUserMap.get(usersStore.userId) || [];
     usersItems = usersItems.filter(id => id !== itemId);
     this.itemIdsByUserMap.set(usersStore.userId, usersItems);
-
+    this.itemMap.delete(itemId);
     itemService.deleteItem(itemId, usersStore.userId);
   }
 
