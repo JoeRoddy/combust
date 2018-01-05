@@ -5,7 +5,7 @@ const { getUserAdmins, updateData } = require("../helpers/firebase_helper");
 const { mkdirSync } = require("../helpers/fs_helper");
 const tar = require("tar");
 
-function install(moduleName, isDependency) {
+function install(moduleName, isDependency, callback) {
   if (!moduleName)
     return console.error(
       "Err: Must specify a module: combust install moduleName\nView available modules here: http://www.example.com"
@@ -13,42 +13,60 @@ function install(moduleName, isDependency) {
   moduleName.toLowerCase();
 
   const firstCap = moduleName.charAt(0).toUpperCase() + moduleName.substring(1);
-  const storePath = `src/stores/${firstCap}Store.js`;
-  const servicePath = `src/service/${firstCap}Service.js`;
+  const storePath = `src/stores/`;
+  const servicePath = `src/service/`;
   const componentsPath = `src/components/combust_examples/${moduleName}`;
 
-  if (fs.existsSync(storePath) || fs.existsSync(servicePath)) {
+  if (
+    fs.existsSync(storePath + firstCap + "Store.js") ||
+    fs.existsSync(storePath + firstCap + "s" + "Store.js")
+  ) {
+    //TODO: check if module is installed (in a less shitty way than this^)
     if (!isDependency) {
       console.info(`${moduleName} module already installed`.red);
     }
     return; //dependency already installed
   }
-  const tempFolder = fs.mkdtempSync(os.tmpdir() + "/");
+
+  const tempFolder = "deleteMe" + moduleName;
+  mkdirSync(tempFolder);
 
   //download npm contents and unzip into temp directory
   const { stdout, stderr } = shell.exec(`npm pack combust-${moduleName}`, {
     silent: true
   });
   stderr && console.error(stderr);
-  const tgzFile = stdout.trim();
+  let tgzFile = stdout.trim();
+  shell.exec(`mv ${tgzFile} ${tempFolder}`);
+
   tar
     .extract({
-      file: tgzFile
+      cwd: tempFolder,
+      file: tempFolder + "/" + tgzFile
     })
     .then(() => {
-      fs.unlink(tgzFile);
-      shell.exec(`mv package ${tempFolder}`);
-      const instructions = JSON.parse(
-        fs.readFileSync(`${tempFolder}/package/combust.json`, "utf8")
+      fs.unlink(tempFolder + "/" + tgzFile);
+
+      let jsonData = fs.readFileSync(
+        `${tempFolder}/package/combust.json`,
+        "utf8"
       );
+
+      let instructions = JSON.parse(jsonData);
       downloadDependencies(instructions.dependencies);
+      const storeFile = fs.readdirSync(`${tempFolder}/package/stores`)[0];
 
       //extract files we need and move to src
       mkdirSync("src/stores");
       mkdirSync("src/service");
       mkdirSync(componentsPath);
-      shell.exec(`mv ${tempFolder}/package/Store.js ${storePath}`);
-      shell.exec(`mv ${tempFolder}/package/Service.js ${servicePath}`);
+
+      shell.exec(`mv -v ${tempFolder}/package/stores/* ${storePath}`, {
+        silent: true
+      });
+      shell.exec(`mv -v ${tempFolder}/package/service/* ${servicePath}`, {
+        silent: true
+      });
       shell.exec(`mv ${tempFolder}/package/components/* ${componentsPath}`);
 
       //execute installation instructions
@@ -56,22 +74,27 @@ function install(moduleName, isDependency) {
         ? instructions.installation
         : null;
       executeInstallInstructions(installInstructions);
-      updateCombustConfig(moduleName);
+      updateCombustConfig(storeFile);
       shell.exec(`rm -rf ${tempFolder}`);
       if (!isDependency) {
         console.log(
-          `\n${moduleName}`.yellow + ` succesfully installed!`.yellow
+          `\n${moduleName}`.yellow + ` succesfully installed!\n`.yellow
         );
+      } else {
+        callback && callback(null, `${moduleName} installed as a dependency`);
       }
     });
-  return true;
+  return;
 }
 
 function downloadDependencies(dependencies) {
   for (let dependency in dependencies) {
-    let installCompleted = install(dependency, true);
-    if (installCompleted) {
-      console.log(dependency.yellow + " module installed as a dependency");
+    try {
+      install(dependency, true, (err, res) => {
+        console.log(err || res);
+      });
+    } catch (err) {
+      console.log("issue installing " + dependency);
     }
   }
 }
@@ -92,16 +115,18 @@ function executeInstallInstructions(installInstructions) {
     });
 }
 
-function updateCombustConfig(moduleName) {
+function updateCombustConfig(storeName) {
   const filePath = "src/.combust/init.js";
+  let firstCap = storeName.substring(0, storeName.length - 3);
+  let lowered = firstCap;
+  lowered = lowered.charAt(0).toLowerCase() + lowered.substring(1);
   let file = fs.readFileSync(filePath);
-  const firstCap = moduleName.charAt(0).toUpperCase() + moduleName.substring(1);
   file = insertImports(file, [
-    `import ${moduleName}Store from "../stores/${firstCap}Store"`
+    `import ${lowered} from "../stores/${firstCap}"`
   ]);
   file = insertAfter(file, {
     pattern: "stores = {\n",
-    code: [`\t${moduleName}Store,`]
+    code: [`\t${lowered},`]
   });
 
   fs.writeFileSync(filePath, file);
