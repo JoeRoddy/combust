@@ -26,9 +26,9 @@ class ItemStore {
   }
 
   storeItem(item, userId) {
+    this.itemMap.set(item.id, item);
     let idsForUser = this.itemIdsByUserMap.get(userId) || [];
     idsForUser.push(item.id);
-    this.itemMap.set(item.id, item);
     this.itemIdsByUserMap.set(userId, idsForUser);
   }
 
