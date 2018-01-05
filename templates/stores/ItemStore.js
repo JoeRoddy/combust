@@ -49,13 +49,12 @@ class ItemStore {
   }
 
   getItemById(itemId) {
-    let item = this.itemMap.get(itemId);
-    if (!item) {
+    if (!this.itemMap.has(itemId)) {
       itemService.listenToItem(itemId, (err, item) => {
         err ? console.log(err) : this.itemMap.set(itemId, item);
       });
     }
-    return item;
+    return this.itemMap.get(itemId);
   }
 
   createItem(item) {
