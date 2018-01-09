@@ -45,7 +45,9 @@ function install(moduleName, isDependency, callback) {
       file: tempFolder + "/" + tgzFile
     })
     .then(() => {
-      fs.unlink(tempFolder + "/" + tgzFile);
+      fs.unlink(tempFolder + "/" + tgzFile, err => {
+        err && console.error(err);
+      });
 
       let jsonData = fs.readFileSync(
         `${tempFolder}/package/combust.json`,
@@ -60,7 +62,6 @@ function install(moduleName, isDependency, callback) {
       mkdirSync("src/stores");
       mkdirSync("src/service");
       mkdirSync(componentsPath);
-
       shell.exec(`mv -v ${tempFolder}/package/stores/* ${storePath}`, {
         silent: true
       });
