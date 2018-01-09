@@ -50,6 +50,7 @@ class ItemStore {
 
   getItemById(itemId) {
     if (!this.itemMap.has(itemId)) {
+      this.itemMap.set(itemId, null); //avoid multiple listeners
       itemService.listenToItem(itemId, (err, item) => {
         err ? console.log(err) : this.itemMap.set(itemId, item);
       });
