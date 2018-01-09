@@ -19,13 +19,16 @@ function install(moduleName, isDependency, callback) {
 
   if (
     fs.existsSync(storePath + firstCap + "Store.js") ||
-    fs.existsSync(storePath + firstCap + "s" + "Store.js")
+    fs.existsSync(storePath + firstCap + "s" + "Store.js") ||
+    fs.existsSync(
+      storePath + firstCap.substring(0, firstCap.length - 1) + "Store.js"
+    )
   ) {
     //TODO: check if module is installed (in a less shitty way than this^)
     if (!isDependency) {
       console.info(`${moduleName} module already installed`.red);
     }
-    return; //dependency already installed
+    return callback(null, "ALREADY_INSTALLED"); //dependency already installed
   }
 
   const tempFolder = "deleteMe" + moduleName;
@@ -55,49 +58,91 @@ function install(moduleName, isDependency, callback) {
       );
 
       let instructions = JSON.parse(jsonData);
-      downloadDependencies(instructions.dependencies);
-      const storeFile = fs.readdirSync(`${tempFolder}/package/stores`)[0];
+      downloadDependencies(instructions.dependencies)
+        .then(a => {
+          const storeFile = fs.readdirSync(`${tempFolder}/package/stores`)[0];
 
-      //extract files we need and move to src
-      mkdirSync("src/stores");
-      mkdirSync("src/service");
-      mkdirSync(componentsPath);
-      shell.exec(`mv -v ${tempFolder}/package/stores/* ${storePath}`, {
-        silent: true
-      });
-      shell.exec(`mv -v ${tempFolder}/package/service/* ${servicePath}`, {
-        silent: true
-      });
-      shell.exec(`mv ${tempFolder}/package/components/* ${componentsPath}`);
+          //extract files we need and move to src
+          mkdirSync("src/stores");
+          mkdirSync("src/service");
+          mkdirSync(componentsPath);
+          shell.exec(`mv -v ${tempFolder}/package/stores/* ${storePath}`, {
+            silent: true
+          });
+          shell.exec(`mv -v ${tempFolder}/package/service/* ${servicePath}`, {
+            silent: true
+          });
+          shell.exec(`mv ${tempFolder}/package/components/* ${componentsPath}`);
 
-      //execute installation instructions
-      const installInstructions = instructions
-        ? instructions.installation
-        : null;
-      executeInstallInstructions(installInstructions);
-      updateCombustConfig(storeFile);
-      shell.exec(`rm -rf ${tempFolder}`);
-      if (!isDependency) {
-        console.log(
-          `\n${moduleName}`.yellow + ` succesfully installed!\n`.yellow
-        );
-      } else {
-        callback && callback(null, `${moduleName} installed as a dependency`);
-      }
+          //execute installation instructions
+          const installInstructions = instructions
+            ? instructions.installation
+            : null;
+          executeInstallInstructions(installInstructions);
+          updateCombustConfig(storeFile);
+          shell.exec(`rm -rf ${tempFolder}`);
+          if (!isDependency) {
+            console.log(
+              `\n${moduleName}`.yellow + ` succesfully installed!\n`.yellow
+            );
+          } else {
+            callback &&
+              callback(null, `${moduleName} installed as a dependency`);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+        });
     });
-  return;
+  // return;
 }
 
+/**
+ * synchronously downloads all dependencies, promise resolve when done or rejects onErr
+ * @param {array} dependencies
+ */
 function downloadDependencies(dependencies) {
-  for (let dependency in dependencies) {
-    try {
-      install(dependency, true, (err, res) => {
-        console.log(err || res);
-      });
-    } catch (err) {
-      console.log("issue installing " + dependency);
+  const dependencyArr =
+    typeof dependencies !== "undefined" && dependencies
+      ? Object.keys(dependencies)
+      : [];
+
+  return new Promise((resolve, reject) => {
+    if (dependencyArr.length === 0) {
+      return resolve();
     }
-  }
+
+    const installDependency = (dependency, callback) => {
+      try {
+        install(dependency, true, (err, res) => {
+          if (err) {
+            console.log(err);
+          } else if (res !== "ALREADY_INSTALLED") {
+            console.log(res);
+          }
+          callback(err, res);
+        });
+      } catch (err) {
+        callback(err);
+      }
+    };
+
+    let i = 0;
+
+    const recursiveInstall = dependency => {
+      installDependency(dependency, (err, res) => {
+        if (err) return reject(err);
+        i++;
+        if (i < dependencyArr.length) {
+          recursiveInstall(dependencyArr[i]);
+        } else {
+          resolve(); //all dependencies installed
+        }
+      });
+    };
+
+    recursiveInstall(dependencyArr[0]);
+  });
 }
 
 function executeInstallInstructions(installInstructions) {
