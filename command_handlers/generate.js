@@ -54,15 +54,14 @@ const createFiles = function(moduleTitle, fieldsAndVals) {
   const templatePath = __dirname + "/../templates/";
   const capped =
     singularTitle.charAt(0).toUpperCase() + singularTitle.substring(1);
-  ["service/", "stores/", "components/combust_examples/"].forEach(folder => {
+  ["service/", "stores/", "components/"].forEach(folder => {
     const folderPath = templatePath + folder;
-    if (folder === "components/combust_examples/") {
+    if (folder === "components/") {
       const componentPath = `./src/${folder}${singularTitle.toLowerCase()}s`;
       try {
-        fs.mkdirSync(componentPath);
         ncp(
           //cp -r
-          templatePath + folder + "/styles/",
+          templatePath + "components/styles/",
           componentPath + "/styles/",
           function(err) {
             if (err) return console.error(err);
@@ -77,7 +76,7 @@ const createFiles = function(moduleTitle, fieldsAndVals) {
           }
         );
       } catch (err) {
-        //may already exist
+        console.log(err);
       }
       folder += singularTitle.toLowerCase() + "s";
     }
@@ -92,7 +91,7 @@ const createFiles = function(moduleTitle, fieldsAndVals) {
             data = replaceTitleOccurrences(singularTitle, data);
             data = insertFieldsAndDefaultVals(data, fieldsAndVals);
             const fileName = file.replace("Item", capped);
-            console.log("writing file: " + fileName);
+            console.log("creating file: " + fileName);
 
             fs.writeFile(`./src/${folder}/${fileName}`, data, err => {
               err && console.log("err updating file:" + err);
@@ -151,10 +150,10 @@ const addNewRoutes = function(moduleTitle) {
   const instructions = {
     "components/Routes.jsx": {
       imports: [
-        `import ${capped}s from "./combust_examples/${lowered}s/${capped}s";`,
-        `import Create${capped} from "./combust_examples/${lowered}s/Create${capped}";`,
-        `import Update${capped} from "./combust_examples/${lowered}s/Update${capped}";`,
-        `import ${capped} from './combust_examples/${lowered}s/${capped}';`
+        `import ${capped}s from "./${lowered}s/${capped}s";`,
+        `import Create${capped} from "./${lowered}s/Create${capped}";`,
+        `import Update${capped} from "./${lowered}s/Update${capped}";`,
+        `import ${capped} from './${lowered}s/${capped}';`
       ],
       renderEnd: [
         `<Route path="/${lowered}sByUser/:userId" component={${capped}s} />`,

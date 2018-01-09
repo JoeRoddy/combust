@@ -1,9 +1,9 @@
-import itemStore from "../../../stores/ItemStore";
-import usersStore from "../../../stores/UsersStore";
-
 import React, { Component } from "react";
 import { observer } from "mobx-react";
 import { Link } from "react-router-dom";
+
+import itemStore from "../../stores/ItemStore";
+import usersStore from "../../stores/UsersStore";
 
 const fields = {};
 

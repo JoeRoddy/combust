@@ -1,9 +1,9 @@
-import itemStore from "../../../stores/ItemStore";
-import usersStore from "../../../stores/UsersStore";
 import { Link } from "react-router-dom";
 import React, { Component } from "react";
 import { observer } from "mobx-react";
 
+import itemStore from "../../stores/ItemStore";
+import usersStore from "../../stores/UsersStore";
 import "./styles/Items.css";
 
 @observer

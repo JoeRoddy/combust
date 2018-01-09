@@ -1,7 +1,6 @@
 import { observable, computed } from "mobx";
-import itemService from "../service/ItemService";
 
-//DEPENDENCIES
+import itemService from "../service/ItemService";
 import usersStore from "./UsersStore";
 
 class ItemStore {
