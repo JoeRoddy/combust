@@ -15,7 +15,7 @@ function install(moduleName, isDependency, callback) {
   const firstCap = moduleName.charAt(0).toUpperCase() + moduleName.substring(1);
   const storePath = `src/stores/`;
   const servicePath = `src/service/`;
-  const componentsPath = `src/components/combust_examples/${moduleName}`;
+  const componentsPath = `src/components/${moduleName}`;
 
   if (
     fs.existsSync(storePath + firstCap + "Store.js") ||
