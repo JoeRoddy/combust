@@ -10,6 +10,7 @@ import "./styles/Items.css";
 export default class Items extends Component {
   render() {
     const userId = this.props.match.params.userId;
+    const user = usersStore.getUserById(userId);
     let items = itemStore.getItemsByUserId(userId);
 
     return (
@@ -21,7 +22,10 @@ export default class Items extends Component {
             </button>
           </Link>
         )}
-        <div className="uk-margin-small"> items belonging to {userId}: </div>
+        <div className="uk-margin-small">
+          {" "}
+          items {user && <span>belonging to {user.displayName}</span>}:{" "}
+        </div>
         {items &&
           Object.keys(items).map(itemId => {
             return (
