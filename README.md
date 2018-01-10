@@ -1,6 +1,9 @@
 # Combust
 Combust is a collection of tools for rapid JavaScript/React development.
 
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/lJnvq0A_7WQ" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
 ## Get started
 `sudo npm i -g combust`
 
@@ -10,4 +13,3 @@ Combust is a collection of tools for rapid JavaScript/React development.
 
 `cd myApp && npm start`
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/lJnvq0A_7WQ" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
