@@ -34,14 +34,14 @@ export default class CreateItem extends Component {
     const type = fields[field];
 
     return (
-      <div className="uk-margin">
+      <div className="uk-margin" key={field}>
         {type === "text" ? (
           <textarea
             className="uk-textarea uk-form-width-large"
             onChange={e => {
               this.handleChange(e, field);
             }}
-            value={this.state[field] != null ? this.state[field] : null}
+            value={this.state[field] != null ? this.state[field] : ""}
             placeholder={field}
           />
         ) : (
@@ -51,7 +51,7 @@ export default class CreateItem extends Component {
             onChange={e => {
               this.handleChange(e, field);
             }}
-            value={this.state[field] != null ? this.state[field] : null}
+            value={this.state[field] != null ? this.state[field] : ""}
             placeholder={field}
           />
         )}

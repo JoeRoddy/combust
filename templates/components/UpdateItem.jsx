@@ -34,7 +34,7 @@ export default class UpdateItem extends Component {
     const type = fields[field];
 
     return (
-      <div className="uk-margin">
+      <div className="uk-margin" key={field}>
         {type === "text" ? (
           <textarea
             className="uk-textarea uk-form-width-large"
@@ -78,38 +78,7 @@ export default class UpdateItem extends Component {
             Object.keys(fields).map(field => {
               return this.renderInputForField(field, item);
             })}
-          {/* 
-          <div className="uk-margin">
-            <input
-              className="uk-input uk-form-width-large"
-              type="text"
-              onChange={e => {
-                this.setState({ field1: e.target.value });
-              }}
-              value={
-                this.state.field1 != null
-                  ? this.state.field1
-                  : item && item.field1
-              }
-              placeholder="field1"
-            />
-          </div>
-          <div className="uk-margin">
-            <textarea
-              className="uk-textarea uk-form-width-large"
-              onChange={e => {
-                this.setState({ field2: e.target.value });
-              }}
-              placeholder="field2"
-              value={
-                this.state.field2 != null
-                  ? this.state.field2
-                  : item && item.field2
-              }
-              placeholder="field2"
-            /> */}
-          {/* </div> */}
-          <Link to={"/item/" + itemId}>
+          <Link key={itemId} to={"/item/" + itemId}>
             <button
               className="uk-button uk-button-default"
               onClick={this.updateItem}

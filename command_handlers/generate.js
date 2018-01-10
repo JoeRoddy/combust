@@ -1,7 +1,8 @@
 const shell = require("shelljs");
 const fs = require("fs");
 const {
-  executeInstallInstructions
+  executeInstallInstructions,
+  updateDatabaseRules
 } = require("../command_handlers/install.js");
 const { getFirebaseProjects } = require("../helpers/firebase_helper.js");
 const {
@@ -10,6 +11,7 @@ const {
 } = require("../helpers/fs_helper.js");
 const ncp = require("ncp");
 const path = require("path");
+const templatePath = __dirname + "/../templates/";
 
 module.exports = (moduleTitle, fieldsAndVals) => {
   if (!currentDirIsCombustApp()) {
@@ -51,7 +53,6 @@ const createFiles = function(moduleTitle, fieldsAndVals) {
       ? moduleTitle.substring(0, moduleTitle.length - 1)
       : moduleTitle;
 
-  const templatePath = __dirname + "/../templates/";
   const capped =
     singularTitle.charAt(0).toUpperCase() + singularTitle.substring(1);
   ["service/", "stores/", "components/"].forEach(folder => {
@@ -91,15 +92,17 @@ const createFiles = function(moduleTitle, fieldsAndVals) {
             data = replaceTitleOccurrences(singularTitle, data);
             data = insertFieldsAndDefaultVals(data, fieldsAndVals);
             const fileName = file.replace("Item", capped);
-            console.log("creating file: " + fileName);
 
             fs.writeFile(`./src/${folder}/${fileName}`, data, err => {
-              err && console.log("err updating file:" + err);
+              console.log(
+                err ? "err updating file:" + err : "created file: " + fileName
+              );
             });
           });
         });
     });
   });
+  createDbRules(singularTitle);
 };
 
 const replaceTitleOccurrences = function(moduleTitle, data) {
@@ -174,6 +177,14 @@ const addNewRoutes = function(moduleTitle) {
   };
 
   executeInstallInstructions(instructions);
+};
+
+const createDbRules = function(moduleName) {
+  fs.readFile(templatePath + "rules.json", "utf8", (err, data) => {
+    let rules = replaceAll(data, "item", moduleName);
+    rules = JSON.parse(rules);
+    updateDatabaseRules(rules);
+  });
 };
 
 const replaceAll = function(string, omit, place, prevstring) {

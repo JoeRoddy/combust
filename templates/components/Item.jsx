@@ -24,9 +24,9 @@ const Item = props => {
             {" " + new Date(item.createdAt).toString()}
           </div>
           {fields &&
-            Object.keys(fields).map(field => {
+            Object.keys(fields).map((field, i) => {
               return (
-                <div key={field}>
+                <div key={i}>
                   <b>{field}:</b>
                   {" " + item[field]}
                 </div>

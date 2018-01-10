@@ -90,7 +90,6 @@ function install(moduleName, isDependency, callback) {
             if (Object.keys(rules).length > 0) {
               updateDatabaseRules(rules);
             }
-
             console.log(
               `\n${moduleName}`.yellow + ` succesfully installed!\n`.yellow
             );
@@ -287,7 +286,8 @@ function getCodeStrFromArr(codeArray) {
 
 module.exports = {
   install,
-  executeInstallInstructions
+  executeInstallInstructions,
+  updateDatabaseRules
 };
 
 /**
