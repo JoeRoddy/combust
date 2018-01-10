@@ -4,6 +4,9 @@ const fs = require("fs");
 const { getUserAdmins, updateData } = require("../helpers/firebase_helper");
 const { mkdirSync } = require("../helpers/fs_helper");
 const tar = require("tar");
+const stripJsonComments = require("strip-json-comments");
+
+let rules = {};
 
 function install(moduleName, isDependency, callback) {
   if (!moduleName)
@@ -74,6 +77,8 @@ function install(moduleName, isDependency, callback) {
           });
           shell.exec(`mv ${tempFolder}/package/components/* ${componentsPath}`);
 
+          if (instructions.rules) rules[moduleName] = instructions.rules;
+
           //execute installation instructions
           const installInstructions = instructions
             ? instructions.installation
@@ -82,6 +87,10 @@ function install(moduleName, isDependency, callback) {
           updateCombustConfig(storeFile);
           shell.exec(`rm -rf ${tempFolder}`);
           if (!isDependency) {
+            if (Object.keys(rules).length > 0) {
+              updateDatabaseRules(rules);
+            }
+
             console.log(
               `\n${moduleName}`.yellow + ` succesfully installed!\n`.yellow
             );
@@ -143,6 +152,45 @@ function downloadDependencies(dependencies) {
 
     recursiveInstall(dependencyArr[0]);
   });
+}
+
+function updateDatabaseRules(rules) {
+  let dirtyJson = fs.readFileSync("database.rules.json", "utf8");
+  let rulesFile = JSON.parse(stripJsonComments(dirtyJson));
+  let currentRules = rulesFile.rules;
+
+  //merge new rules into existing
+  for (let moduleName in rules) {
+    let module = rules[moduleName];
+    currentRules[moduleName] = Object.assign(
+      currentRules[moduleName] || {},
+      rules[moduleName]
+    );
+  }
+
+  //save & publish
+  fs.writeFileSync("database.rules.json", JSON.stringify(rulesFile, null, 2));
+  console.log("\npublishing new database rules");
+
+  const { stdout, stderr, code } = shell.exec(
+    "firebase deploy --only database",
+    {
+      silent: true
+    }
+  );
+  if (stderr) {
+    console.log(
+      stderr.includes("Command requires authentication")
+        ? "\nYou must be logged in to the Firebase CLI to publish rules.".red +
+          "\nPlease run: " +
+          "firebase login".cyan +
+          "\nFollowed by: " +
+          "firebase deploy --only database".cyan
+        : stderr
+    );
+  } else {
+    console.log(stdout);
+  }
 }
 
 function executeInstallInstructions(installInstructions) {
