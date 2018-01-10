@@ -1,5 +1,5 @@
 # Combust
-Combust is a collection of tools that help you build serverless JavaScript applications rapidly.
+Combust is a collection of tools for rapid JavaScript/React development.
 
 ## Get started
 `sudo npm i -g combust`
