@@ -14,26 +14,34 @@ export default class Items extends Component {
     let items = itemStore.getItemsByUserId(userId);
 
     return (
-      <div className="Items uk-padding">
-        {userId === usersStore.userId && (
-          <Link to="/createItem">
-            <button className="uk-button uk-button-default">
-              Create New Item
-            </button>
-          </Link>
-        )}
-        <div className="uk-margin-small">
-          {" "}
-          items {user && <span>belonging to {user.displayName}</span>}:{" "}
+      <div className="Items uk-flex uk-flex-center uk-padding">
+        <div className="uk-margin">
+          {userId === usersStore.userId && (
+            <Link to="/createItem">
+              <button className="uk-button uk-button-default">
+                Create New Item
+              </button>
+            </Link>
+          )}
+          <h4>
+            {" "}
+            items {user && <span>belonging to {user.displayName}</span>}:{" "}
+          </h4>
+          <ul className="uk-list uk-list-divider">
+            {items &&
+              Object.keys(items)
+                .reverse()
+                .map(itemId => {
+                  return (
+                    <li key={itemId}>
+                      <Link key={itemId} to={"/item/" + itemId}>
+                        <div>{items[itemId] && <span>{itemId}</span>}</div>
+                      </Link>
+                    </li>
+                  );
+                })}
+          </ul>
         </div>
-        {items &&
-          Object.keys(items).map(itemId => {
-            return (
-              <Link key={itemId} to={"/item/" + itemId}>
-                <div>{items[itemId] && <span>{itemId}</span>}</div>
-              </Link>
-            );
-          })}
       </div>
     );
   }

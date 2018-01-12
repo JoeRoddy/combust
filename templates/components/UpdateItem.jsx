@@ -67,7 +67,7 @@ export default class UpdateItem extends Component {
     const { item } = this.props;
 
     return (
-      <div className="CreateItem uk-flex uk-flex-center uk-padding">
+      <div className="UpdateItem">
         <form className="uk-width-large">
           <legend className="uk-legend">Update Item</legend>
           {fields &&
@@ -75,10 +75,16 @@ export default class UpdateItem extends Component {
               return this.renderInputForField(field, item);
             })}
           <button
-            className="uk-button uk-button-default"
+            className="uk-button uk-button-default uk-margin-small-right"
             onClick={e => this.updateItem(item)}
           >
             Save Item
+          </button>
+          <button
+            onClick={this.props.toggleEdit}
+            className="uk-button uk-button-danger"
+          >
+            Cancel
           </button>
         </form>
       </div>

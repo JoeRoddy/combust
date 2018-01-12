@@ -27,7 +27,7 @@ export default class Item extends Component {
     const userOwnedItem = item && item.createdBy === usersStore.userId;
 
     return (
-      <div className="Item uk-padding">
+      <div className="Item uk-flex uk-flex-center uk-padding">
         {!this.state.isUnderEdit ? (
           <div>
             <RenderItem item={item} />
@@ -46,12 +46,12 @@ export default class Item extends Component {
 const RenderItem = ({ item }) => {
   return (
     <div className="Item-details uk-margin-bottom">
-      <div>
-        <b>itemId:</b>
+      <h4 className="uk-heading-divider">
+        <b>Item:</b>
         {" " + item.id}
-      </div>
+      </h4>
       <div>
-        <b>createdAt:</b>
+        <b>Created on:</b>
         {" " + new Date(item.createdAt).toString()}
       </div>
       {fields &&
@@ -71,12 +71,11 @@ const ItemOptions = ({ item, toggleEdit }) => {
   return (
     <div>
       <button
-        className="uk-button uk-button-default uk-margin-small"
+        className="uk-button uk-button-default uk-margin-small-right"
         onClick={toggleEdit}
       >
         Update Item
       </button>
-      <br />
       <Link to={"/itemsByUser/" + item.createdBy}>
         <button
           onClick={e => item.delete()}
