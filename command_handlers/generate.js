@@ -7,6 +7,7 @@ const {
 const { getFirebaseProjects } = require("../helpers/firebase_helper.js");
 const {
   currentDirIsCombustApp,
+  mkdirSync,
   nonCombustAppErr
 } = require("../helpers/fs_helper.js");
 const ncp = require("ncp");
@@ -59,6 +60,7 @@ const createFiles = function(moduleTitle, fieldsAndVals) {
     const folderPath = templatePath + folder;
     if (folder === "components/") {
       const componentPath = `./src/${folder}${singularTitle.toLowerCase()}s`;
+      mkdirSync(componentPath);
       try {
         ncp(
           //cp -r
@@ -68,11 +70,17 @@ const createFiles = function(moduleTitle, fieldsAndVals) {
             if (err) return console.error(err);
             fs.rename(
               `${componentPath}/styles/Items.css`,
-              `${componentPath}/styles/${capped}s.css`
+              `${componentPath}/styles/${capped}s.css`,
+              err => {
+                err && console.error(err);
+              }
             );
             fs.rename(
               `${componentPath}/styles/Items.scss`,
-              `${componentPath}/styles/${capped}s.scss`
+              `${componentPath}/styles/${capped}s.scss`,
+              err => {
+                err && console.error(err);
+              }
             );
           }
         );
@@ -168,7 +176,6 @@ const addNewRoutes = function(moduleTitle) {
     "components/Navbar.jsx": {
       after: {
         pattern: "const additionalLinks = [",
-
         code: [
           `<Link to={"/${lowered}sByUser/" + (usersStore?usersStore.userId:"")}>My ${capped}s</Link>,`
         ]

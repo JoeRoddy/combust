@@ -44,7 +44,7 @@ const Item = props => {
           <br />
           <Link to={"/itemsByUser/" + item.createdBy}>
             <button
-              onClick={e => itemStore.deleteItem(itemId)}
+              onClick={e => item.delete()}
               className="uk-button uk-button-danger"
             >
               Delete Item

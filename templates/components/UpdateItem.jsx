@@ -11,7 +11,6 @@ export default class UpdateItem extends Component {
   state = {};
 
   updateItem = item => {
-    let submitObject = {};
     fields &&
       Object.keys(fields).forEach(field => {
         if (this.state[field] || this.state[field] === "") {
@@ -19,8 +18,7 @@ export default class UpdateItem extends Component {
           submitObject[field] = val;
         }
       });
-    submitObject.id = this.props.match.params.itemId;
-    itemStore.updateItem(submitObject);
+    item.save();
   };
 
   handleChange = (e, field) => {
@@ -81,7 +79,7 @@ export default class UpdateItem extends Component {
           <Link key={itemId} to={"/item/" + itemId}>
             <button
               className="uk-button uk-button-default"
-              onClick={this.updateItem}
+              onClick={e => this.updateItem(item)}
             >
               Save Item
             </button>
