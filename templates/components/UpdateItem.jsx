@@ -15,7 +15,7 @@ export default class UpdateItem extends Component {
       Object.keys(fields).forEach(field => {
         if (this.state[field] || this.state[field] === "") {
           const val = this.state[field] || null;
-          submitObject[field] = val;
+          item[field] = val;
         }
       });
     item.save();
