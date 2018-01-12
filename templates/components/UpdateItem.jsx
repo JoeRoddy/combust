@@ -1,8 +1,5 @@
 import React, { Component } from "react";
 import { observer } from "mobx-react";
-import { Link } from "react-router-dom";
-
-import itemStore from "../../stores/ItemStore";
 
 const fields = {};
 
@@ -19,6 +16,7 @@ export default class UpdateItem extends Component {
         }
       });
     item.save();
+    this.props.toggleEdit();
   };
 
   handleChange = (e, field) => {
@@ -66,8 +64,8 @@ export default class UpdateItem extends Component {
   };
 
   render() {
-    const itemId = this.props.match.params.itemId;
-    let item = itemStore.getItemById(itemId);
+    const { item } = this.props;
+
     return (
       <div className="CreateItem uk-flex uk-flex-center uk-padding">
         <form className="uk-width-large">
@@ -76,14 +74,12 @@ export default class UpdateItem extends Component {
             Object.keys(fields).map(field => {
               return this.renderInputForField(field, item);
             })}
-          <Link key={itemId} to={"/item/" + itemId}>
-            <button
-              className="uk-button uk-button-default"
-              onClick={e => this.updateItem(item)}
-            >
-              Save Item
-            </button>
-          </Link>
+          <button
+            className="uk-button uk-button-default"
+            onClick={e => this.updateItem(item)}
+          >
+            Save Item
+          </button>
         </form>
       </div>
     );

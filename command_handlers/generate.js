@@ -163,13 +163,11 @@ const addNewRoutes = function(moduleTitle) {
       imports: [
         `import ${capped}s from "./${lowered}s/${capped}s";`,
         `import Create${capped} from "./${lowered}s/Create${capped}";`,
-        `import Update${capped} from "./${lowered}s/Update${capped}";`,
         `import ${capped} from './${lowered}s/${capped}';`
       ],
       renderEnd: [
         `<Route path="/${lowered}sByUser/:userId" component={${capped}s} />`,
         `<Route path="/create${capped}/" component={Create${capped}} />`,
-        `<Route path="/update${capped}/:${lowered}Id" component={Update${capped}} />`,
         `<Route path="/${lowered}/:${lowered}Id" component={${capped}} />`
       ]
     },

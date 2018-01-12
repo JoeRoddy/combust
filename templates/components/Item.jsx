@@ -1,59 +1,90 @@
 import { Link } from "react-router-dom";
-import React from "react";
+import React, { Component } from "react";
 import { observer } from "mobx-react";
 
 import itemStore from "../../stores/ItemStore";
 import usersStore from "../../stores/UsersStore";
+import UpdateItem from "./UpdateItem";
 
 const fields = {};
 
-const Item = props => {
-  const itemId = props.match.params.itemId;
-  let item = itemStore.getItemById(itemId);
-  let userOwnedItem = item && item.createdBy === usersStore.userId;
+@observer
+export default class Item extends Component {
+  state = {
+    isUnderEdit: false
+  };
+
+  toggleEdit = () => {
+    this.setState({ isUnderEdit: !this.state.isUnderEdit });
+  };
+
+  render() {
+    const itemId = this.props.match.params.itemId;
+    const item = itemStore.getItemById(itemId);
+    if (!item) {
+      return <span />;
+    }
+    const userOwnedItem = item && item.createdBy === usersStore.userId;
+
+    return (
+      <div className="Item uk-padding">
+        {!this.state.isUnderEdit ? (
+          <div>
+            <RenderItem item={item} />
+            {userOwnedItem && (
+              <ItemOptions item={item} toggleEdit={this.toggleEdit} />
+            )}
+          </div>
+        ) : (
+          <UpdateItem item={item} toggleEdit={this.toggleEdit} />
+        )}
+      </div>
+    );
+  }
+}
+
+const RenderItem = ({ item }) => {
   return (
-    <div className="Item uk-padding">
-      {item && (
-        <div className="Item-details uk-margin-bottom">
-          <div>
-            <b>itemId:</b>
-            {" " + itemId}
-          </div>
-          <div>
-            <b>createdAt:</b>
-            {" " + new Date(item.createdAt).toString()}
-          </div>
-          {fields &&
-            Object.keys(fields).map((field, i) => {
-              return (
-                <div key={i}>
-                  <b>{field}:</b>
-                  {" " + item[field]}
-                </div>
-              );
-            })}
-        </div>
-      )}
-      {userOwnedItem && (
-        <div>
-          <Link to={"/updateItem/" + itemId}>
-            <button className="uk-button uk-button-default uk-margin-small">
-              Update Item
-            </button>
-          </Link>
-          <br />
-          <Link to={"/itemsByUser/" + item.createdBy}>
-            <button
-              onClick={e => item.delete()}
-              className="uk-button uk-button-danger"
-            >
-              Delete Item
-            </button>
-          </Link>
-        </div>
-      )}
+    <div className="Item-details uk-margin-bottom">
+      <div>
+        <b>itemId:</b>
+        {" " + item.id}
+      </div>
+      <div>
+        <b>createdAt:</b>
+        {" " + new Date(item.createdAt).toString()}
+      </div>
+      {fields &&
+        Object.keys(fields).map((field, i) => {
+          return (
+            <div key={i}>
+              <b>{field}:</b>
+              {" " + item[field]}
+            </div>
+          );
+        })}
     </div>
   );
 };
 
-export default observer(Item);
+const ItemOptions = ({ item, toggleEdit }) => {
+  return (
+    <div>
+      <button
+        className="uk-button uk-button-default uk-margin-small"
+        onClick={toggleEdit}
+      >
+        Update Item
+      </button>
+      <br />
+      <Link to={"/itemsByUser/" + item.createdBy}>
+        <button
+          onClick={e => item.delete()}
+          className="uk-button uk-button-danger"
+        >
+          Delete Item
+        </button>
+      </Link>
+    </div>
+  );
+};
