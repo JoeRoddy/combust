@@ -16,7 +16,3 @@ Combust is a collection of tools for rapid JavaScript/React development.
 
 ## Modules
 You can browse some of the available modules [here.](./modules.md)
-
-[parent](../modules.md)
-
-[try 3](modules.md)
