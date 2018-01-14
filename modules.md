@@ -8,19 +8,19 @@ Combust modules give you the ability to avoid re-writing the same features every
  
 ## [Users](https://github.com/JoeRoddy/combust-users)
 
-Combust comes with a users module out of the box when you run `combust create myApp`.
+Combust comes with a users module out of the box when you run `combust create myApp`
 
 ## [Chat](https://github.com/JoeRoddy/combust-chat)
 
-Real time chat module with 3+ member conversations. 
+Real time chat module with 3+ member conversations
 
 ## [Posts](https://github.com/JoeRoddy/combust-posts)
 
-Social style posts module with a nested comment tree and reaction support (like, dislike, etc.).
+Social style posts module with a nested comment tree and reaction support (like, dislike, etc.)
 
 ## [Notifications](https://github.com/JoeRoddy/combust-notifications)
 
-Notifications system with support for user actions (Accept / Decline request, etc).
+Notifications system with support for user actions (Accept / Decline request, etc)
 
 ## [Friends](https://github.com/JoeRoddy/combust-friends)
 
