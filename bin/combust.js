@@ -48,21 +48,8 @@ require("yargs") // eslint-disable-line
     }
   )
   .command(
-    "admin [email]",
-    "mark a user account as admin",
-    yargs => {
-      yargs.positional("projectType", {
-        describe: "project type",
-        default: "web"
-      });
-    },
-    argv => {
-      createAdmin(argv.email);
-    }
-  )
-  .command(
     "generate [moduleTitle] [field:dataType:defaultValue]",
-    "create a new firebase service with a list of fields and their defaults",
+    "create a new firebase service with a list of fields and default values",
     yargs => {
       yargs.positional("moduleTitle", {
         describe: "module title",
@@ -85,9 +72,6 @@ require("yargs") // eslint-disable-line
       generate(argv.moduleTitle, fields);
     }
   )
-  .command("command2", "example", yargs => {
-    shell.exec("echo do stuff");
-  })
   .demand(1, "must provide a valid command")
   .help("h")
   .alias("h", "help").argv;

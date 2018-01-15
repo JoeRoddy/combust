@@ -23,7 +23,7 @@ module.exports = projectTitle => {
         JSON.stringify(projects)
       );
     }
-  });
+  }, true);
 
   const spinner = ora("Installing npm dependencies").start();
   const { stdout, stderr, code } = shell.exec(

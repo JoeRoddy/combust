@@ -2,7 +2,11 @@ const prompt = require("prompt");
 const shell = require("shelljs");
 const fs = require("fs");
 const ora = require("ora");
-const { getFirebaseProjects } = require("../helpers/firebase_helper.js");
+const {
+  getFirebaseProjects,
+  isFirebaseCliInstalled,
+  firebaseCliErr
+} = require("../helpers/firebase_helper.js");
 const {
   currentDirIsCombustApp,
   nonCombustAppErr
@@ -11,6 +15,15 @@ const {
 module.exports = function(dbSpecified) {
   if (!currentDirIsCombustApp()) {
     return console.error(nonCombustAppErr);
+  }
+  if (!isFirebaseCliInstalled()) {
+    return console.log(
+      firebaseCliErr +
+        "\nThen login with:                 " +
+        "firebase login".cyan +
+        "\nFinally, execute again:          " +
+        "combust configure".cyan
+    );
   }
   if (dbSpecified) {
     return setWorkingProject(dbSpecified);

@@ -5,16 +5,16 @@ const { nonCombustAppErr } = require("./fs_helper.js");
 const COMBUST_EMAIL = "do_not_delete@combustjs.org";
 const COMBUST_PASS = "temporaryPass";
 
-const getFirebaseProjects = callback => {
+const getFirebaseProjects = (callback, isSilent) => {
   shell.exec("firebase list", { silent: true }, (someShit, stdout, stderr) => {
-    if (stderr && stderr.includes("please run firebase login")) {
+    if (!isSilent && stderr && stderr.includes("please run firebase login")) {
       return console.error(
-        "You must log in to the Firebase CLI first.\n\nTo install it, run: " +
+        "\nYou must log in to the Firebase CLI first.\n\nTo install it, run: " +
           "npm i -g firebase-tools".cyan +
           "\n\nTo login: " +
           "firebase login".cyan
       );
-    } else if (stderr) {
+    } else if (!isSilent && stderr) {
       return console.log(stderr);
     }
     return _getDatabasesFromFirebaseListOutput(stdout, callback);
@@ -107,10 +107,20 @@ function updateData(dataPath, json) {
   });
 }
 
+function isFirebaseCliInstalled() {
+  const { stdout, stderr } = shell.exec(`firebase`, { silent: true });
+  return stderr ? false : true;
+}
+
+const firebaseCliErr =
+  "\nFirst, install the firebase cli: " + "npm i -g firebase-tools".cyan;
+
 module.exports = {
   initializeFirebase,
   loginWithMockAccount,
   getFirebaseProjects,
+  isFirebaseCliInstalled,
+  firebaseCliErr,
   currentDirIsCombustApp,
   getUserAdmins,
   updateData
