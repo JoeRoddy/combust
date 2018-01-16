@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 import { Link } from "react-router-dom";
 
 import itemStore from "../../stores/ItemStore";
-import usersStore from "../../stores/UsersStore";
+import userStore from "../../stores/UserStore";
 
 const fields = {};
 
@@ -68,7 +68,7 @@ export default class CreateItem extends Component {
             Object.keys(fields).map(field => {
               return this.renderInputForField(field);
             })}
-          <Link to={"/itemsByUser/" + usersStore.userId}>
+          <Link to={"/itemsByUser/" + userStore.userId}>
             <button
               className="uk-button uk-button-default"
               onClick={this.submit}

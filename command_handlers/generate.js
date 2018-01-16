@@ -175,7 +175,7 @@ const addNewRoutes = function(moduleTitle) {
       after: {
         pattern: "const additionalLinks = [",
         code: [
-          `<Link to={"/${lowered}sByUser/" + (usersStore?usersStore.userId:"")}>My ${capped}s</Link>,`
+          `<Link to={"/${lowered}sByUser/" + (userStore?userStore.userId:"")}>My ${capped}s</Link>,`
         ]
       }
     }

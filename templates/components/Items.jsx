@@ -3,20 +3,20 @@ import React, { Component } from "react";
 import { observer } from "mobx-react";
 
 import itemStore from "../../stores/ItemStore";
-import usersStore from "../../stores/UsersStore";
+import userStore from "../../stores/UserStore";
 import "./styles/Items.css";
 
 @observer
 export default class Items extends Component {
   render() {
     const userId = this.props.match.params.userId;
-    const user = usersStore.getUserById(userId);
+    const user = userStore.getUserById(userId);
     let items = itemStore.getItemsByUserId(userId);
 
     return (
       <div className="Items uk-flex uk-flex-center uk-padding">
         <div className="uk-margin">
-          {userId === usersStore.userId && (
+          {userId === userStore.userId && (
             <Link to="/createItem">
               <button className="uk-button uk-button-default">
                 Create New Item

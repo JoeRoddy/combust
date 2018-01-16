@@ -3,7 +3,7 @@ import React, { Component } from "react";
 import { observer } from "mobx-react";
 
 import itemStore from "../../stores/ItemStore";
-import usersStore from "../../stores/UsersStore";
+import userStore from "../../stores/UserStore";
 import UpdateItem from "./UpdateItem";
 
 const fields = {};
@@ -24,7 +24,7 @@ export default class Item extends Component {
     if (!item) {
       return <span />;
     }
-    const userOwnedItem = item && item.createdBy === usersStore.userId;
+    const userOwnedItem = item && item.createdBy === userStore.userId;
 
     return (
       <div className="Item uk-flex uk-flex-center uk-padding">

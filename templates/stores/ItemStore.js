@@ -1,12 +1,12 @@
 import { observable, computed } from "mobx";
 
 import itemService from "../service/ItemService";
-import usersStore from "./UsersStore";
+import userStore from "./UserStore";
 
 class ItemStore {
   subscribeToEvents() {
-    usersStore.onLogin(_loadItemsForUser);
-    usersStore.onLogout(_onUserLogout);
+    userStore.onLogin(_loadItemsForUser);
+    userStore.onLogout(_onUserLogout);
   }
 
   @observable items = new Map();
@@ -14,7 +14,7 @@ class ItemStore {
 
   @computed
   get itemsOfCurrentUser() {
-    return this.getItemsByUserId(usersStore.userId);
+    return this.getItemsByUserId(userStore.userId);
   }
 
   getItemsByUserId(userId) {
@@ -39,7 +39,7 @@ class ItemStore {
   }
 
   createItem(item) {
-    const userId = usersStore.userId;
+    const userId = userStore.userId;
     if (!item || !userId) {
       return;
     }
@@ -62,11 +62,11 @@ const _updateItem = function() {
 
 const _deleteItem = function() {
   const itemId = this.id;
-  let usersItems = itemStore.itemIdsByUser.get(usersStore.userId) || [];
+  let usersItems = itemStore.itemIdsByUser.get(userStore.userId) || [];
   usersItems = usersItems.filter(id => id !== itemId);
-  itemStore.itemIdsByUser.set(usersStore.userId, usersItems);
+  itemStore.itemIdsByUser.set(userStore.userId, usersItems);
   itemStore.items.delete(itemId);
-  itemService.deleteItem(itemId, usersStore.userId);
+  itemService.deleteItem(itemId, userStore.userId);
 };
 
 const _storeItem = item => {
