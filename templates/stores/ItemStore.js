@@ -58,6 +58,9 @@ const _updateItem = function() {
   delete item.delete;
   delete item.id;
   itemService.updateItem(itemId, item);
+  item.save = _updateItem;
+  item.delete = _deleteItem;
+  item.id = itemId;
 };
 
 const _deleteItem = function() {
