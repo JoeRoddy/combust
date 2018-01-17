@@ -36,8 +36,9 @@ module.exports = (moduleTitle, fieldsAndVals) => {
 const convertToObjArray = function(fieldsAndVals) {
   return fieldsAndVals.map(fieldValPair => {
     let [fieldName, dataType, defaultValue] = fieldValPair.split(":");
-    if (!["text", "string", "number"].includes(dataType)) {
-      throw `Probem with data type: ${dataType}.  Valid data types: text, string, number`;
+    const validDataTypes = ["text", "string", "number", "boolean", "image"];
+    if (!validDataTypes.includes(dataType)) {
+      throw `Probem with data type: ${dataType}\nValid data types: ${validDataTypes.join(', ')}`;
     }
 
     return {

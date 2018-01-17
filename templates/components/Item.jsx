@@ -60,6 +60,12 @@ const RenderItem = ({ item }) => {
             <div key={i}>
               <b>{field}:</b>
               {" " + item[field]}
+              {fields[field] === "image" && (
+                <span>
+                  <br />
+                  <img className="uk-width-1-3" src={item[field]} alt="" />
+                </span>
+              )}
             </div>
           );
         })}
