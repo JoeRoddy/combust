@@ -6,6 +6,4 @@ Command line tool for creating and prototyping firebase apps.
 
 `combust create web myWebApp`
 
-`combust install chat`
-
 `cd myWebApp && npm start`
