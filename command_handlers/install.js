@@ -41,7 +41,14 @@ function install(moduleName, isDependency, callback) {
   const { stdout, stderr } = shell.exec(`npm pack combust-${moduleName}`, {
     silent: true
   });
-  stderr && console.error(stderr);
+  if (stderr) {
+    return console.error(
+      "Error downloading the ".red +
+        moduleName.cyan +
+        " module.  ".red +
+        `\nEnsure it exists by searching for "combust-${moduleName}" @ https://www.npmjs.com/search`
+    );
+  }
   let tgzFile = stdout.trim();
   shell.exec(`mv ${tgzFile} ${tempFolder}`);
 
@@ -181,10 +188,10 @@ function updateDatabaseRules(rules) {
     console.log(
       stderr.includes("Command requires authentication")
         ? "\nYou must be logged in to the Firebase CLI to publish rules.".red +
-        "\nPlease run: " +
-        "firebase login".cyan +
-        "\nFollowed by: " +
-        "firebase deploy --only database".cyan
+          "\nPlease run: " +
+          "firebase login".cyan +
+          "\nFollowed by: " +
+          "firebase deploy --only database".cyan
         : stderr
     );
   } else {
@@ -202,8 +209,8 @@ function executeInstallInstructions(installInstructions) {
       Object.keys(fileInstructions).forEach(operation => {
         const linesToInsert = fileInstructions[operation];
         if (linesToInsert.pattern && /^win/.test(process.platform)) {
-          linesToInsert.pattern = linesToInsert.pattern.replaceAll('\n', '\r');
-        } //windows is funnnnnnnnnnn.... 
+          linesToInsert.pattern = linesToInsert.pattern.replaceAll("\n", "\r");
+        } //windows is funnnnnnnnnnn....
         file = operationsMap[operation](file, linesToInsert);
       });
 
@@ -221,7 +228,7 @@ function updateCombustConfig(storeName) {
     `import ${lowered} from "../stores/${firstCap}"`
   ]);
   file = insertAfter(file, {
-    pattern: `stores = {${/^win/.test(process.platform) ? '\r' : '\n'}`,
+    pattern: `stores = {${/^win/.test(process.platform) ? "\r" : "\n"}`,
     code: [`\t${lowered},`]
   });
   fs.writeFileSync(filePath, file);
@@ -292,9 +299,9 @@ module.exports = {
   updateDatabaseRules
 };
 
-String.prototype.replaceAll = function (search, replacement) {
+String.prototype.replaceAll = function(search, replacement) {
   var target = this;
-  return target.replace(new RegExp(search, 'g'), replacement);
+  return target.replace(new RegExp(search, "g"), replacement);
 };
 
 /**
@@ -317,7 +324,7 @@ function saveInstallData(installData, callback) {
   const checkIfFinished = iterationCompleted => {
     if (
       (iterationCompleted ? ++finishedPromises : finishedPromises) >=
-      totalPromises &&
+        totalPromises &&
       finishedWithTree
     ) {
       console.log("installData after:", installData);
