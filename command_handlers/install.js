@@ -30,7 +30,7 @@ function install(moduleName, isDependency, callback) {
   ) {
     //TODO: check if module is installed (in a less shitty way than this^)
     if (!isDependency) {
-      console.info(`${moduleName} module already installed`.red);
+      return console.error(`${moduleName} module already installed`.red);
     }
     return callback(null, "ALREADY_INSTALLED"); //dependency already installed
   }
@@ -105,7 +105,10 @@ function install(moduleName, isDependency, callback) {
             );
           } else {
             callback &&
-              callback(null, `${moduleName} installed as a dependency`);
+              callback(
+                null,
+                moduleName.cyan + " module installed as a dependency"
+              );
           }
         })
         .catch(err => {
@@ -129,7 +132,6 @@ function downloadDependencies(dependencies) {
     if (dependencyArr.length === 0) {
       return resolve();
     }
-
     const installDependency = (dependency, callback) => {
       try {
         install(dependency, true, (err, res) => {
@@ -198,7 +200,7 @@ function updateDatabaseRules(rules) {
         : stderr
     );
   } else {
-    console.log(stdout);
+    console.log("rules published".green);
   }
 }
 
