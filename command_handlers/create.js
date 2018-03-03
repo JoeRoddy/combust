@@ -10,6 +10,12 @@ let repos = {
 
 //eventually: mobile - web - desktop
 module.exports = projectTitle => {
+  if (fs.existsSync(projectTitle)) {
+    return console.error(
+      "Directory ".red + projectTitle.cyan + " already exists.".red
+    );
+  }
+
   projectTitle = projectTitle || `myCombustApp`;
   let repoUrl = repos["web"];
   console.log("Cloning repository");
