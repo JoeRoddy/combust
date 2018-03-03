@@ -5,6 +5,7 @@ const { getUserAdmins, updateData } = require("../helpers/firebase_helper");
 const { mkdirSync } = require("../helpers/fs_helper");
 const tar = require("tar");
 const stripJsonComments = require("strip-json-comments");
+const tmp = require("tmp");
 
 let rules = {};
 
@@ -34,7 +35,8 @@ function install(moduleName, isDependency, callback) {
     return callback(null, "ALREADY_INSTALLED"); //dependency already installed
   }
 
-  const tempFolder = "deleteMe" + moduleName;
+  const tmpObj = tmp.dirSync();
+  const tempFolder = `${tmpObj.name}/${moduleName}`;
   mkdirSync(tempFolder);
 
   //download npm contents and unzip into temp directory
