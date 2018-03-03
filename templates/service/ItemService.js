@@ -1,6 +1,6 @@
 import firebase from "firebase";
 
-class ItemService {
+class ItemDb {
   createItem(item, userId) {
     let defaultFields = {};
     item.createdAt = new Date().getTime();
@@ -103,6 +103,6 @@ const _listenToItemIdsByUser = function(userId, callback) {
     });
 };
 
-const itemService = new ItemService();
+const itemDb = new ItemDb();
 
-export default itemService;
+export default itemDb;

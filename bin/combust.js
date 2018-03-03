@@ -49,7 +49,7 @@ require("yargs") // eslint-disable-line
   )
   .command(
     "generate [moduleTitle] [field:dataType:defaultValue]",
-    "create a new firebase service with a list of fields and default values",
+    "create a new combust module with a list of data fields and default values",
     yargs => {
       yargs.positional("moduleTitle", {
         describe: "module title",

@@ -1,6 +1,6 @@
 import { observable, computed } from "mobx";
 
-import itemService from "../service/ItemService";
+import itemDb from "../db/ItemDb";
 import userStore from "./UserStore";
 
 class ItemStore {
@@ -31,7 +31,7 @@ class ItemStore {
   getItemById(itemId) {
     if (!this.items.has(itemId)) {
       this.items.set(itemId, null); //avoid multiple listeners
-      itemService.listenToItem(itemId, (err, item) => {
+      itemDb.listenToItem(itemId, (err, item) => {
         err ? console.log(err) : _storeItem(item);
       });
     }
@@ -43,7 +43,7 @@ class ItemStore {
     if (!item || !userId) {
       return;
     }
-    itemService.createItem(item, userId);
+    itemDb.createItem(item, userId);
   }
 }
 
@@ -57,7 +57,7 @@ const _updateItem = function() {
   delete item.save;
   delete item.delete;
   delete item.id;
-  itemService.updateItem(itemId, item);
+  itemDb.updateItem(itemId, item);
   item.save = _updateItem;
   item.delete = _deleteItem;
   item.id = itemId;
@@ -69,7 +69,7 @@ const _deleteItem = function() {
   usersItems = usersItems.filter(id => id !== itemId);
   itemStore.itemIdsByUser.set(userStore.userId, usersItems);
   itemStore.items.delete(itemId);
-  itemService.deleteItem(itemId, userStore.userId);
+  itemDb.deleteItem(itemId, userStore.userId);
 };
 
 const _storeItem = item => {
@@ -92,7 +92,7 @@ const _loadItemsForUser = user => {
     return;
   }
   itemStore.itemIdsByUser.set(userId, []);
-  itemService.listenToItemsByUser(user.id, (err, item) => {
+  itemDb.listenToItemsByUser(user.id, (err, item) => {
     err ? console.log(err) : _storeItem(item);
   });
 };

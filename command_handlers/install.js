@@ -17,7 +17,7 @@ function install(moduleName, isDependency, callback) {
 
   const firstCap = moduleName.charAt(0).toUpperCase() + moduleName.substring(1);
   const storePath = `src/stores/`;
-  const servicePath = `src/service/`;
+  const dbPath = `src/db/`;
   const componentsPath = `src/components/${moduleName}`;
 
   if (
@@ -49,6 +49,7 @@ function install(moduleName, isDependency, callback) {
         `\nEnsure it exists by searching for "combust-${moduleName}" @ https://www.npmjs.com/search`
     );
   }
+
   let tgzFile = stdout.trim();
   shell.exec(`mv ${tgzFile} ${tempFolder}`);
 
@@ -74,12 +75,12 @@ function install(moduleName, isDependency, callback) {
 
           //extract files we need and move to src
           mkdirSync("src/stores");
-          mkdirSync("src/service");
+          mkdirSync("src/db");
           mkdirSync(componentsPath);
           shell.exec(`mv -v ${tempFolder}/package/stores/* ${storePath}`, {
             silent: true
           });
-          shell.exec(`mv -v ${tempFolder}/package/service/* ${servicePath}`, {
+          shell.exec(`mv -v ${tempFolder}/package/db/* ${dbPath}`, {
             silent: true
           });
           shell.exec(`mv ${tempFolder}/package/components/* ${componentsPath}`);

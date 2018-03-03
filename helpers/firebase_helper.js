@@ -42,7 +42,7 @@ const getUserAdmins = () => {
             users &&
               Object.keys(users).forEach(uid => {
                 if (users[uid].DO_NOT_DELETE) {
-                  //delete combust service admins
+                  //delete combust db admins
                   delete users[uid];
                 }
               });
