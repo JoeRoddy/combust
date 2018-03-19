@@ -8,7 +8,8 @@ const { getFirebaseProjects } = require("../helpers/firebase_helper.js");
 const {
   currentDirIsCombustApp,
   mkdirSync,
-  nonCombustAppErr
+  nonCombustAppErr,
+  getProjectType
 } = require("../helpers/fs_helper.js");
 const ncp = require("ncp");
 const path = require("path");
@@ -28,9 +29,11 @@ module.exports = (moduleTitle, fieldsAndVals) => {
       missing
     );
   }
+
   const fieldsObjArr = convertToObjArray(fieldsAndVals);
-  createFiles(moduleTitle, fieldsObjArr);
-  addNewRoutes(moduleTitle);
+  const projectType = getProjectType();
+  createFiles(moduleTitle, fieldsObjArr, projectType);
+  addNewRoutes(moduleTitle, projectType);
 };
 
 const convertToObjArray = function(fieldsAndVals) {
@@ -38,7 +41,9 @@ const convertToObjArray = function(fieldsAndVals) {
     let [fieldName, dataType, defaultValue] = fieldValPair.split(":");
     const validDataTypes = ["text", "string", "number", "boolean", "image"];
     if (!validDataTypes.includes(dataType)) {
-      throw `Probem with data type: ${dataType}\nValid data types: ${validDataTypes.join(', ')}`;
+      throw `Probem with data type: ${dataType}\nValid data types: ${validDataTypes.join(
+        ", "
+      )}`;
     }
 
     return {
@@ -49,7 +54,7 @@ const convertToObjArray = function(fieldsAndVals) {
   });
 };
 
-const createFiles = function(moduleTitle, fieldsAndVals) {
+const createFiles = function(moduleTitle, fieldsAndVals, projectType) {
   const singularTitle =
     moduleTitle.charAt(moduleTitle.length - 1).toUpperCase() === "S"
       ? moduleTitle.substring(0, moduleTitle.length - 1)
@@ -57,37 +62,34 @@ const createFiles = function(moduleTitle, fieldsAndVals) {
 
   const capped =
     singularTitle.charAt(0).toUpperCase() + singularTitle.substring(1);
-  ["service/", "stores/", "components/"].forEach(folder => {
-    const folderPath = templatePath + folder;
+  ["db/", "stores/", "components/"].forEach(folder => {
+    let folderPath = templatePath + folder;
     if (folder === "components/") {
-      const componentPath = `./src/${folder}${singularTitle.toLowerCase()}s`;
+      folderPath += projectType + "/";
+      const componentPath = `./src/components/${singularTitle.toLowerCase()}s`;
       mkdirSync(componentPath);
-      try {
-        ncp(
-          //cp -r
-          templatePath + "components/styles/",
-          componentPath + "/styles/",
-          function(err) {
-            if (err) return console.error(err);
-            fs.rename(
-              `${componentPath}/styles/Items.css`,
-              `${componentPath}/styles/${capped}s.css`,
-              err => {
-                err && console.error(err);
-              }
-            );
-            fs.rename(
-              `${componentPath}/styles/Items.scss`,
-              `${componentPath}/styles/${capped}s.scss`,
-              err => {
-                err && console.error(err);
-              }
-            );
-          }
-        );
-      } catch (err) {
-        console.log(err);
+      if (projectType === "web") {
+        try {
+          ncp(
+            //cp -r
+            templatePath + "components/web/styles/",
+            componentPath + "/styles/",
+            function(err) {
+              if (err) return console.error(err);
+              fs.rename(
+                `${componentPath}/styles/Items.scss`,
+                `${componentPath}/styles/${capped}s.scss`,
+                err => {
+                  err && console.error(err);
+                }
+              );
+            }
+          );
+        } catch (err) {
+          console.log(err);
+        }
       }
+
       folder += singularTitle.toLowerCase() + "s";
     }
     fs.readdir(folderPath, (err, files) => {
@@ -121,6 +123,8 @@ const replaceTitleOccurrences = function(moduleTitle, data) {
 
   data = replaceAll(data, "item", lowered);
   data = replaceAll(data, "Item", capped);
+  data = replaceAll(data, "List" + capped, "ListItem"); //<ListItem /> (mobile)
+
   return data;
 };
 
@@ -149,17 +153,24 @@ const insertFieldsAndDefaultVals = function(fileData, fieldsAndVals) {
   );
 };
 
-const addNewRoutes = function(moduleTitle) {
+const addNewRoutes = function(moduleTitle, projectType) {
   const singularTitle =
     moduleTitle.charAt(moduleTitle.length - 1).toUpperCase() === "S"
       ? moduleTitle.substring(0, moduleTitle.length - 1)
       : moduleTitle;
-
   const ending = singularTitle.substring(1);
-  const capped = singularTitle.charAt(0).toUpperCase() + ending;
-  const lowered = singularTitle.charAt(0).toLowerCase() + ending;
+  const capitalizedTitle = singularTitle.charAt(0).toUpperCase() + ending;
+  const lowerCaseTitle = singularTitle.charAt(0).toLowerCase() + ending;
+  const instructions =
+    projectType === "mobile"
+      ? getInstructionsForMobileRoutes(capitalizedTitle, lowerCaseTitle)
+      : getInstructionsForWebRoutes(capitalizedTitle, lowerCaseTitle);
 
-  const instructions = {
+  executeInstallInstructions(instructions);
+};
+
+const getInstructionsForWebRoutes = function(capped, lowered) {
+  return {
     "components/Routes.jsx": {
       imports: [
         `import ${capped}s from "./${lowered}s/${capped}s";`,
@@ -181,8 +192,38 @@ const addNewRoutes = function(moduleTitle) {
       }
     }
   };
+};
 
-  executeInstallInstructions(instructions);
+const getInstructionsForMobileRoutes = function(capped, lowered) {
+  return {
+    "components/Routes.js": {
+      imports: [
+        `import ${capped}s from "./${lowered}s/${capped}s";`,
+        `import Create${capped} from "./${lowered}s/Create${capped}";`,
+        `import ${capped} from './${lowered}s/${capped}';`
+      ],
+      after: {
+        pattern: "const COMBUST_GENERATE_SCREENS = {",
+        code: [
+          `${capped}: { screen: ${capped}, path: "/${capped}" },`,
+          `${capped}sByUser: { screen: ${capped}s, path: "/${capped}sByUser" },`,
+          `Create${capped}: { screen: Create${capped}, path: "/Create${capped}" }`
+        ]
+      }
+    },
+    "components/reusable/SideMenu.js": {
+      after: {
+        pattern: "const COMBUST_MENU_ITEMS = [",
+        code: [
+          `{
+            title: "My ${capped}s",
+            icon: "check-circle",
+            onPress: () => nav.navigate("${capped}sByUser", { userId: user.id })
+          },`
+        ]
+      }
+    }
+  };
 };
 
 const createDbRules = function(moduleName) {

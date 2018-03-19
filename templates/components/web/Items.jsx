@@ -4,7 +4,7 @@ import { observer } from "mobx-react";
 
 import itemStore from "../../stores/ItemStore";
 import userStore from "../../stores/UserStore";
-import "./styles/Items.css";
+import "./styles/Items.scss";
 
 @observer
 export default class Items extends Component {

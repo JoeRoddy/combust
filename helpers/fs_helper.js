@@ -1,5 +1,12 @@
 const fs = require("fs");
 
+const getProjectType = () => {
+  //ghetto, replace with some config prop later
+  return fs.existsSync("./src/components/reusable/SideMenu.js")
+    ? "mobile"
+    : "web";
+};
+
 const currentDirIsCombustApp = () => {
   return fs.existsSync("./src/.combust");
 };
@@ -29,6 +36,7 @@ function mkdirSync(path) {
 }
 
 module.exports = {
+  getProjectType,
   currentDirIsCombustApp,
   nonCombustAppErr,
   mkdirSync
