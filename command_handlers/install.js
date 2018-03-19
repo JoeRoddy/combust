@@ -2,7 +2,12 @@ const os = require("os");
 const shell = require("shelljs");
 const fs = require("fs");
 const { getUserAdmins, updateData } = require("../helpers/firebase_helper");
-const { mkdirSync } = require("../helpers/fs_helper");
+const {
+  currentDirIsCombustApp,
+  mkdirSync,
+  nonCombustAppErr,
+  getProjectType
+} = require("../helpers/fs_helper");
 const tar = require("tar");
 const stripJsonComments = require("strip-json-comments");
 const tmp = require("tmp");
@@ -10,7 +15,9 @@ const tmp = require("tmp");
 let rules = {};
 
 function install(moduleName, isDependency, callback) {
-  if (!moduleName)
+  if (!currentDirIsCombustApp()) {
+    return console.error(nonCombustAppErr);
+  } else if (!moduleName)
     return console.error(
       "Err: Must specify a module: combust install moduleName\nView available modules here: http://www.example.com"
     );
@@ -20,6 +27,7 @@ function install(moduleName, isDependency, callback) {
   const storePath = `src/stores/`;
   const dbPath = `src/db/`;
   const componentsPath = `src/components/${moduleName}`;
+  const projectType = getProjectType();
 
   if (
     fs.existsSync(storePath + firstCap + "Store.js") ||
@@ -86,14 +94,26 @@ function install(moduleName, isDependency, callback) {
             silent: true
           });
           shell.exec(`mv ${tempFolder}/package/components/* ${componentsPath}`);
-
           if (instructions.rules) rules[moduleName] = instructions.rules;
 
           //execute installation instructions
           const installInstructions = instructions
-            ? instructions.installation
+            ? instructions[
+                projectType === "mobile"
+                  ? "installation_mobile"
+                  : "installation"
+              ]
             : null;
-          executeInstallInstructions(installInstructions);
+          if (projectType === "mobile" && !installInstructions) {
+            console.log(
+              "Mobile components not supplied for " +
+                moduleName.cyan +
+                " module"
+            );
+          } else {
+            executeInstallInstructions(installInstructions);
+          }
+
           updateCombustConfig(storeFile);
           shell.exec(`rm -rf ${tempFolder}`);
           if (!isDependency) {
