@@ -4,26 +4,12 @@ var yargs = require("yargs");
 let create = require("../command_handlers/create.js");
 let { install } = require("../command_handlers/install.js");
 let configure = require("../command_handlers/configure.js");
-let createAdmin = require("../command_handlers/admin.js");
 let generate = require("../command_handlers/generate.js");
 
 require("yargs") // eslint-disable-line
   .command(
-    "install [module]",
-    "install a module: users, login, chat",
-    yargs => {
-      yargs.positional("module", {
-        describe: "module to add"
-      });
-    },
-    argv => {
-      install(argv.module);
-    }
-  )
-  .command(
     "create [title]",
-    "create a project",
-
+    "create a web project",
     yargs => {
       yargs.positional("title", {
         describe: "project title",
@@ -32,6 +18,31 @@ require("yargs") // eslint-disable-line
     },
     argv => {
       create(argv.title);
+    }
+  )
+  .command(
+    "mobile [title]",
+    "create a mobile project",
+    yargs => {
+      yargs.positional("title", {
+        describe: "project title",
+        default: null
+      });
+    },
+    argv => {
+      create(argv.title, "mobile");
+    }
+  )
+  .command(
+    "install [module]",
+    "install a combust module",
+    yargs => {
+      yargs.positional("module", {
+        describe: "module to add"
+      });
+    },
+    argv => {
+      install(argv.module);
     }
   )
   .command(

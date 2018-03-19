@@ -5,11 +5,12 @@ const colors = require("colors");
 const { getFirebaseProjects } = require("../helpers/firebase_helper.js");
 
 let repos = {
-  web: "https://github.com/JoeRoddy/combust-web.git"
+  web: "https://github.com/JoeRoddy/combust-web.git",
+  mobile: "https://github.com/JoeRoddy/combust-mobile.git"
 };
 
-//eventually: mobile - web - desktop
-module.exports = projectTitle => {
+//eventually: mobile, web, && desktop
+module.exports = (projectTitle, projectType = "web") => {
   if (fs.existsSync(projectTitle)) {
     return console.error(
       "Directory ".red + projectTitle.cyan + " already exists.".red
@@ -17,7 +18,7 @@ module.exports = projectTitle => {
   }
 
   projectTitle = projectTitle || `myCombustApp`;
-  let repoUrl = repos["web"];
+  let repoUrl = repos[projectType];
   console.log("Cloning repository");
   shell.exec(
     `git init ${projectTitle} && cd ${projectTitle} && git pull ${repoUrl}`
@@ -45,7 +46,13 @@ module.exports = projectTitle => {
           "\n\nInstall new modules with:  " +
           "combust install [moduleName]".cyan +
           "\n\nStart your app with:  " +
-          `cd ${projectTitle} && npm start`.cyan
+          `${
+            projectType == "web"
+              ? `cd ${projectTitle} && npm start`
+              : `\ncd ${projectTitle}\nand\nnpm run ios` +
+                " or ".white +
+                "npm run android".cyan
+          }`.cyan
       );
     }
   );
