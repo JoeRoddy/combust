@@ -11,6 +11,10 @@ const {
   nonCombustAppErr,
   getProjectType
 } = require("../helpers/fs_helper.js");
+const {
+  replaceAll,
+  replaceTitleOccurrences
+} = require("../helpers/string_helper.js");
 const ncp = require("ncp");
 const path = require("path");
 const templatePath = __dirname + "/../templates/";
@@ -114,18 +118,6 @@ const createFiles = function(moduleTitle, fieldsAndVals, projectType) {
     });
   });
   createDbRules(singularTitle);
-};
-
-const replaceTitleOccurrences = function(moduleTitle, data) {
-  const ending = moduleTitle.substring(1);
-  const capped = moduleTitle.charAt(0).toUpperCase() + ending;
-  const lowered = moduleTitle.charAt(0).toLowerCase() + ending;
-
-  data = replaceAll(data, "item", lowered);
-  data = replaceAll(data, "Item", capped);
-  data = replaceAll(data, "List" + capped, "ListItem"); //<ListItem /> (mobile)
-
-  return data;
 };
 
 const insertFieldsAndDefaultVals = function(fileData, fieldsAndVals) {
@@ -232,12 +224,6 @@ const createDbRules = function(moduleName) {
     rules = JSON.parse(rules);
     updateDatabaseRules(rules);
   });
-};
-
-const replaceAll = function(string, omit, place, prevstring) {
-  if (prevstring && string === prevstring) return string;
-  prevstring = string.replace(omit, place);
-  return replaceAll(prevstring, omit, place, string);
 };
 
 const readFolderErr = "Error: EISDIR";

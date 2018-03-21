@@ -8,6 +8,10 @@ const {
   nonCombustAppErr,
   getProjectType
 } = require("../helpers/fs_helper");
+const {
+  replaceTitleOccurrences,
+  replaceAll
+} = require("../helpers/string_helper.js");
 const tar = require("tar");
 const stripJsonComments = require("strip-json-comments");
 const tmp = require("tmp");
@@ -93,11 +97,10 @@ function install(moduleName, isDependency, callback) {
           shell.exec(`mv -v ${tempFolder}/package/db/* ${dbPath}`, {
             silent: true
           });
-          shell.exec(`mv ${tempFolder}/package/components/* ${componentsPath}`);
           if (instructions.rules) rules[moduleName] = instructions.rules;
 
           //execute installation instructions
-          const installInstructions = instructions
+          let installInstructions = instructions
             ? instructions[
                 projectType === "mobile"
                   ? "installation_mobile"
@@ -110,7 +113,14 @@ function install(moduleName, isDependency, callback) {
                 moduleName.cyan +
                 " module"
             );
+            createPlaceholderMobileComponent(moduleName);
+            executeInstallInstructions(
+              getDefaultInstallInstrucForMobile(moduleName)
+            );
           } else {
+            shell.exec(
+              `mv ${tempFolder}/package/components/* ${componentsPath}`
+            );
             executeInstallInstructions(installInstructions);
           }
 
@@ -183,6 +193,58 @@ function downloadDependencies(dependencies) {
 
     recursiveInstall(dependencyArr[0]);
   });
+}
+
+function createPlaceholderMobileComponent(moduleName) {
+  fs.readFile(
+    __dirname + "/../templates/NoComponent.js",
+    "utf8",
+    (err, data) => {
+      if (err && err.toString().startsWith("Error: EISDIR")) {
+        return;
+      } else if (err) throw err;
+      const title =
+        moduleName.charAt(0).toUpperCase() + moduleName.substring(1);
+      data = replaceTitleOccurrences(title, data);
+
+      const fileName = title + ".js";
+      const filePath = `src/components/${moduleName}/${fileName}`;
+      fs.writeFile(filePath, data, err => {
+        console.log(
+          err
+            ? "err updating file:" + err
+            : "Created placeholder component: " + filePath.cyan
+        );
+      });
+    }
+  );
+}
+
+function getDefaultInstallInstrucForMobile(moduleName) {
+  const capped = moduleName.charAt(0).toUpperCase() + moduleName.substring(1);
+  const lowered = moduleName.charAt(0).toLowerCase() + moduleName.substring(1);
+
+  return {
+    "components/Routes.js": {
+      imports: [`import ${capped} from "./${lowered}/${capped}";`],
+      after: {
+        pattern: "const COMBUST_GENERATE_SCREENS = {",
+        code: [`${capped}: { screen: ${capped}, path: "/${capped}" },`]
+      }
+    },
+    "components/reusable/SideMenu.js": {
+      after: {
+        pattern: "const COMBUST_MENU_ITEMS = [",
+        code: [
+          `{
+            title: "${capped}",
+            icon: "check-circle",
+            onPress: () => nav.navigate("${capped}", { userId: user.id })
+          },`
+        ]
+      }
+    }
+  };
 }
 
 function updateDatabaseRules(rules) {
