@@ -119,7 +119,9 @@ function install(moduleName, isDependency, callback) {
             );
           } else {
             shell.exec(
-              `mv ${tempFolder}/package/components/* ${componentsPath}`
+              `mv ${tempFolder}/package/${
+                projectType === "mobile" ? "mobile_components" : "components"
+              }/* ${componentsPath}`
             );
             executeInstallInstructions(installInstructions);
           }
@@ -220,6 +222,11 @@ function createPlaceholderMobileComponent(moduleName) {
   );
 }
 
+/**
+ * adds a template component for the module and adds it to
+ * the application's sidemenu
+ * @param {} moduleName
+ */
 function getDefaultInstallInstrucForMobile(moduleName) {
   const capped = moduleName.charAt(0).toUpperCase() + moduleName.substring(1);
   const lowered = moduleName.charAt(0).toLowerCase() + moduleName.substring(1);
