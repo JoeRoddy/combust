@@ -10,7 +10,7 @@ import { colors, viewStyles } from "../../assets/styles/AppStyles";
 import Header from "../reusable/Header";
 import UpdateItem from "./UpdateItem";
 
-const fields = { name: "string", age: "string", photo: "image" };
+const fields = {};
 
 @observer
 export default class Item extends React.Component {

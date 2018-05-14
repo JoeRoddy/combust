@@ -9,7 +9,7 @@ import { colors, viewStyles } from "../../assets/styles/AppStyles";
 import Header from "../reusable/Header";
 import Form from "../reusable/Form";
 
-const fields = { name: "string", age: "string", photo: "image" };
+const fields = {};
 
 const CreateItem = () => {
   const handleSubmit = formData => {
