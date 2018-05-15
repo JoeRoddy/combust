@@ -195,7 +195,7 @@ const getInstructionsForMobileRoutes = function(capped, lowered) {
         `import ${capped} from './${lowered}s/${capped}';`
       ],
       after: {
-        pattern: "const COMBUST_GENERATE_SCREENS = {",
+        pattern: "const COMBUST_SCREENS = {",
         code: [
           `${capped}: { screen: ${capped}, path: "/${capped}" },`,
           `${capped}sByUser: { screen: ${capped}s, path: "/${capped}sByUser" },`,
