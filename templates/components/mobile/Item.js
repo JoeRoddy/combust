@@ -54,6 +54,12 @@ export default class Item extends React.Component {
 const styles = StyleSheet.create({
   bold: {
     fontWeight: "bold"
+  },
+  image: {
+    height: 80,
+    width: 80,
+    marginTop: 20,
+    marginBottom: 20
   }
 });
 
@@ -74,9 +80,10 @@ const RenderItem = ({ item }) => {
             <View key={i}>
               <Text>
                 <Text style={styles.bold}>{field}:</Text>
-                {" " + item[field]}
-                {fields[field] === "image" && (
-                  <Image source={{ uri: item[field] }} />
+                {fields[field] === "image" ? (
+                  <Image source={{ uri: item[field] }} style={styles.image} />
+                ) : (
+                  item[field]
                 )}
               </Text>
             </View>
