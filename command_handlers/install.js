@@ -235,7 +235,7 @@ function getDefaultInstallInstrucForMobile(moduleName) {
     "components/Routes.js": {
       imports: [`import ${capped} from "./${lowered}/${capped}";`],
       after: {
-        pattern: "const COMBUST_GENERATE_SCREENS = {",
+        pattern: "const COMBUST_SCREENS = {",
         code: [`${capped}: { screen: ${capped}, path: "/${capped}" },`]
       }
     },
