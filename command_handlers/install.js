@@ -255,7 +255,8 @@ function getDefaultInstallInstrucForMobile(moduleName) {
 }
 
 function updateDatabaseRules(rules) {
-  let dirtyJson = fs.readFileSync("database.rules.json", "utf8");
+  const dbRulesPath = "./src/.combust/database.rules.json";
+  let dirtyJson = fs.readFileSync(dbRulesPath, "utf8");
   let rulesFile = JSON.parse(stripJsonComments(dirtyJson));
   let currentRules = rulesFile.rules;
 
@@ -269,7 +270,7 @@ function updateDatabaseRules(rules) {
   }
 
   //save & publish
-  fs.writeFileSync("database.rules.json", JSON.stringify(rulesFile, null, 2));
+  fs.writeFileSync(dbRulesPath, JSON.stringify(rulesFile, null, 2));
   console.log("\npublishing new database rules");
 
   const { stdout, stderr, code } = shell.exec(

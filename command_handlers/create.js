@@ -49,7 +49,9 @@ module.exports = (projectTitle, projectType = "web") => {
           `${
             projectType == "web"
               ? `cd ${projectTitle} && npm start`
-              : `\ncd ${projectTitle}\nand\nnpm run ios` +
+              : `\ncd ${projectTitle}\n` +
+                `and`.white +
+                `\nnpm run ios`.cyan +
                 " or ".white +
                 "npm run android".cyan
           }`.cyan
