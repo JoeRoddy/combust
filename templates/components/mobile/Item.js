@@ -1,13 +1,11 @@
 import React from "react";
 import { observer } from "mobx-react";
 import { StyleSheet, Text, View, Image } from "react-native";
-import { Button } from "react-native-elements";
 
 import nav from "../../helpers/NavigatorHelper";
 import itemStore from "../../stores/ItemStore";
 import userStore from "../../stores/UserStore";
-import { colors, viewStyles } from "../../assets/styles/AppStyles";
-import Header from "../reusable/Header";
+import { Button, Screen } from "../reusable";
 import UpdateItem from "./UpdateItem";
 
 const fields = {};
@@ -32,21 +30,18 @@ export default class Item extends React.Component {
     const userOwnedItem = item && item.createdBy === userStore.userId;
 
     return (
-      <View>
-        <Header title="Item" />
-        <View style={viewStyles.padding}>
-          {!this.state.isUnderEdit ? (
-            <View>
-              <RenderItem item={item} />
-              {userOwnedItem && (
-                <ItemOptions item={item} toggleEdit={this.toggleEdit} />
-              )}
-            </View>
-          ) : (
-            <UpdateItem item={item} toggleEdit={this.toggleEdit} />
-          )}
-        </View>
-      </View>
+      <Screen title="Item">
+        {!this.state.isUnderEdit ? (
+          <View>
+            <RenderItem item={item} />
+            {userOwnedItem && (
+              <ItemOptions item={item} toggleEdit={this.toggleEdit} />
+            )}
+          </View>
+        ) : (
+          <UpdateItem item={item} toggleEdit={this.toggleEdit} />
+        )}
+      </Screen>
     );
   }
 }
@@ -82,6 +77,8 @@ const RenderItem = ({ item }) => {
                 <Text style={styles.bold}>{field}:</Text>
                 {fields[field] === "image" ? (
                   <Image source={{ uri: item[field] }} style={styles.image} />
+                ) : typeof item[field] == "boolean" ? (
+                  item[field].toString()
                 ) : (
                   item[field]
                 )}
@@ -97,13 +94,13 @@ const ItemOptions = ({ item, toggleEdit }) => {
   return (
     <View>
       <Button
-        onPress={toggleEdit}
-        backgroundColor={colors.success}
-        containerViewStyle={{ marginBottom: 10, marginTop: 10 }}
         title="Update Item"
+        secondary
+        onPress={toggleEdit}
+        containerViewStyle={{ marginBottom: 10, marginTop: 10 }}
       />
       <Button
-        backgroundColor={colors.warning}
+        danger
         onPress={e => {
           item.delete();
           nav.goBack();

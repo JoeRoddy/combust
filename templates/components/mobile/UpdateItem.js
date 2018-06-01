@@ -1,6 +1,6 @@
 import React from "react";
 
-import Form from "../reusable/Form";
+import { Form } from "../reusable";
 
 const fields = {};
 

@@ -1,35 +1,29 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
-import { Button } from "react-native-elements";
+import { StyleSheet } from "react-native";
 
 import nav from "../../helpers/NavigatorHelper";
 import itemStore from "../../stores/ItemStore";
 import userStore from "../../stores/UserStore";
-import { colors, viewStyles } from "../../assets/styles/AppStyles";
-import Header from "../reusable/Header";
-import Form from "../reusable/Form";
+import { Form, Screen } from "../reusable";
 
 const fields = {};
 
-const CreateItem = () => {
+const CreateItem = props => {
   const handleSubmit = formData => {
     itemStore.createItem(formData);
     nav.goBack();
   };
 
   return (
-    <View>
-      <Header title="Create Item" />
-      <View style={viewStyles.padding}>
-        <Form
-          fields={fields}
-          onSubmit={handleSubmit}
-          onCancel={nav.goBack}
-          title="Create Item"
-          submitText="Save Item"
-        />
-      </View>
-    </View>
+    <Screen title="Create Item">
+      <Form
+        fields={fields}
+        onSubmit={handleSubmit}
+        onCancel={nav.goBack}
+        title="Create Item"
+        submitText="Save Item"
+      />
+    </Screen>
   );
 };
 

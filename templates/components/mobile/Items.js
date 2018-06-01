@@ -1,12 +1,11 @@
 import React from "react";
 import { observer } from "mobx-react";
 import { StyleSheet, View, ScrollView } from "react-native";
-import { List, ListItem, Button } from "react-native-elements";
+import { List, ListItem } from "react-native-elements";
 
 import nav from "../../helpers/NavigatorHelper";
 import itemStore from "../../stores/ItemStore";
-import { colors } from "../../assets/styles/AppStyles";
-import Header from "../reusable/Header";
+import { Button, Screen } from "../reusable";
 
 export default (Items = observer(() => {
   const routeInfo = nav.getCurrentRoute();
@@ -14,8 +13,11 @@ export default (Items = observer(() => {
   const items = itemStore.getItemsByUserId(userId);
 
   return (
-    <View style={{ flex: 1 }}>
-      <Header title="Items" />
+    <Screen
+      title="Items"
+      containerStyle={{ flex: 1 }}
+      style={{ flex: 1, padding: 0 }}
+    >
       <View style={styles.screenContent}>
         <View style={styles.listContainer}>
           <ScrollView>
@@ -35,13 +37,13 @@ export default (Items = observer(() => {
         </View>
         <View style={styles.bottomBtnContainer}>
           <Button
-            backgroundColor={colors.success}
+            success
             title="New Item"
             onPress={() => nav.navigate("CreateItem")}
           />
         </View>
       </View>
-    </View>
+    </Screen>
   );
 }));
 
