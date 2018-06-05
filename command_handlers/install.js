@@ -346,8 +346,17 @@ function insertImports(file, code) {
 }
 
 function replaceCode(file, patternAndCode) {
-  const { pattern, code } = patternAndCode;
-  return file.replace(pattern, getCodeStrFromArr(code));
+  //can be either a single replace -> replace: {pattern:"...", code:[".."]}
+  //or an array of replacements -> replace: [{},{}]
+  const replaceRules = Array.isArray(patternAndCode)
+    ? patternAndCode
+    : [patternAndCode];
+  replaceRules.forEach(pAndC => {
+    const { pattern, code } = pAndC;
+    file = file.replace(pattern, getCodeStrFromArr(code));
+  });
+
+  return file;
 }
 
 function insertAfter(file, patternAndCode) {
