@@ -55,12 +55,12 @@ function install(moduleName, isDependency, callback) {
   const { stdout, stderr } = shell.exec(`npm pack combust-${moduleName}`, {
     silent: true
   });
-  if (stderr) {
+  if (stderr && stderr.startsWith("npm ERR!")) {
     return console.error(
       "Error downloading the ".red +
         moduleName.cyan +
         " module.  ".red +
-        `\nEnsure it exists by searching for "combust-${moduleName}" @ https://www.npmjs.com/search`
+        `\nEnsure it exists on npm: https://www.npmjs.com/search?q=combust-${moduleName}`
     );
   }
 
