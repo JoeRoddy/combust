@@ -27,7 +27,10 @@ module.exports = (projectTitle, projectType = "web") => {
     if (!err) {
       fs.writeFile(
         `${projectTitle}/src/.combust/availApps.json`,
-        JSON.stringify(projects)
+        JSON.stringify(projects),
+        err => {
+          if (err) throw err;
+        }
       );
     }
   }, true);
@@ -41,19 +44,13 @@ module.exports = (projectTitle, projectType = "web") => {
       spinner.stop();
       console.log(
         `\nInstallation complete!`.yellow +
-          `\n\nCreated ${projectTitle} at ` +
+          `\n\nCreated project at:` +
           `\n${process.cwd()}/${projectTitle}`.green +
-          "\n\nInstall new modules with:  " +
-          "combust install [moduleName]".cyan +
           "\n\nStart your app with:  " +
           `${
             projectType == "web"
               ? `cd ${projectTitle} && npm start`
-              : `\ncd ${projectTitle}\n` +
-                `and`.white +
-                `\nnpm run ios`.cyan +
-                " or ".white +
-                "npm run android".cyan
+              : `\ncd ${projectTitle}\n` + `and`.white + `\nnpm start`.cyan
           }`.cyan
       );
     }
