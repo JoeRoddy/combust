@@ -1,6 +1,10 @@
-const os = require("os");
 const shell = require("shelljs");
 const fs = require("fs");
+const ora = require("ora");
+const tar = require("tar");
+const stripJsonComments = require("strip-json-comments");
+const tmp = require("tmp");
+
 const { getUserAdmins, updateData } = require("../helpers/firebase_helper");
 const {
   currentDirIsCombustApp,
@@ -8,15 +12,10 @@ const {
   nonCombustAppErr,
   getProjectType
 } = require("../helpers/fs_helper");
-const {
-  replaceTitleOccurrences,
-  replaceAll
-} = require("../helpers/string_helper.js");
-const tar = require("tar");
-const stripJsonComments = require("strip-json-comments");
-const tmp = require("tmp");
+const { replaceTitleOccurrences } = require("../helpers/string_helper.js");
 
 let rules = {};
+let npmDependencies = {};
 
 function install(moduleName, isDependency, callback) {
   if (!currentDirIsCombustApp()) {
@@ -83,6 +82,7 @@ function install(moduleName, isDependency, callback) {
       );
 
       let instructions = JSON.parse(jsonData);
+      addNpmDependenciesToQue(instructions, projectType);
       downloadDependencies(instructions.dependencies)
         .then(a => {
           const storeFile = fs.readdirSync(`${tempFolder}/package/stores`)[0];
@@ -132,9 +132,11 @@ function install(moduleName, isDependency, callback) {
             if (Object.keys(rules).length > 0) {
               updateDatabaseRules(rules);
             }
-            console.log(
-              `\n${moduleName}`.yellow + ` succesfully installed!\n`.yellow
-            );
+            installNpmDependencies(() => {
+              console.log(
+                `\n${moduleName}`.yellow + ` succesfully installed!\n`.yellow
+              );
+            });
           } else {
             callback &&
               callback(
@@ -311,6 +313,35 @@ function executeInstallInstructions(installInstructions) {
 
       fs.writeFileSync(filePath, file);
     });
+}
+
+function addNpmDependenciesToQue(instructions, projectType) {
+  const npmDeps = instructions
+    ? instructions[
+        `npm_dependencies${
+          projectType === "mobile" ? "_mobile" : "installation"
+        }`
+      ]
+    : null;
+  npmDependencies = Object.assign(npmDependencies, npmDeps);
+}
+
+function installNpmDependencies(callback = () => {}) {
+  if (Object.keys(npmDependencies).length === 0) return callback();
+  const spinner = ora("Installing npm dependencies").start();
+  let dependencyString = ``;
+  for (let key in npmDependencies) {
+    dependencyString += `${key}@${npmDependencies[key]} `;
+  }
+  const { stdout, stderr, code } = shell.exec(
+    `npm install --silent --save ${dependencyString}`,
+    { async: true, silent: true },
+    () => {
+      spinner.clear();
+      spinner.stop();
+      callback();
+    }
+  );
 }
 
 function updateCombustConfig(storeName) {
