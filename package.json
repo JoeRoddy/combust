@@ -17,6 +17,7 @@
     "ncp": "^2.0.0",
     "ora": "^1.3.0",
     "prompt": "^1.0.0",
+    "prompt-radio": "^1.2.1",
     "shelljs": "^0.7.8",
     "strip-json-comments": "^2.0.1",
     "tar": "^4.2.0",

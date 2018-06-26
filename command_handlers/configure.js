@@ -2,6 +2,8 @@ const prompt = require("prompt");
 const shell = require("shelljs");
 const fs = require("fs");
 const ora = require("ora");
+const Radio = require("prompt-radio");
+
 const {
   getFirebaseProjects,
   isFirebaseCliInstalled,
@@ -30,9 +32,13 @@ module.exports = function(dbSpecified) {
   }
   getFirebaseProjects((err, projects) => {
     if (!projects) return null;
-    printAvailableProjects(projects);
-    console.log("\nSelect an application by number".yellow);
-    getUserChoice(projects);
+    if (err)
+      return console.log("Error retrieving your firebase projects:\n", err);
+
+    getUserChoice(projects, projectName => {
+      const project = projects.find(p => p.name === projectName);
+      setWorkingProject(project.id);
+    });
   });
 };
 
@@ -42,40 +48,30 @@ printAvailableProjects = projects => {
   });
 };
 
-function getUserChoice(projectNames, callback) {
-  prompt.message = "";
-  prompt.start();
-  let regexp = projectNames.length > 9 ? /^[1-9][0-9]+$/ : /^[1-9]+$/;
-  prompt.get(
-    [
-      {
-        name: "Project Number",
-        conform: value => {
-          return !isNaN(value) && value > 0 && value <= projectNames.length;
-        },
-        warning: "Project must be chosen by number"
-      }
-    ],
-    (err, result) => {
-      if (err) {
-        return callback(onErr(err));
-      }
-
-      const index = result["Project Number"];
-      if (index > projectNames.length) {
-        return console.error("Project index out of range, try again.");
-      }
-      setWorkingProject(projectNames[index - 1].id);
+getUserChoice = (projectNames, callback) => {
+  const prompt = new Radio({
+    name: "applications",
+    message: "Select an application:",
+    choices: projectNames
+  });
+  prompt.ask(answer => {
+    if (answer === undefined) {
+      //user pressed enter w/o selecting w/ space
+      console.log(
+        "\nErr: ".red +
+          "Select an application with " +
+          "space".green +
+          ", confirm with " +
+          "enter\n".green
+      );
+      return getUserChoice(projectNames, callback);
+    } else {
+      return callback(answer);
     }
-  );
+  });
+};
 
-  onErr = err => {
-    console.log(err);
-    return 1;
-  };
-}
-
-function setWorkingProject(projectId) {
+setWorkingProject = projectId => {
   spinner = ora("Fetching the configuration").start();
   shell.exec("firebase use --add " + projectId, {
     silent: true
@@ -95,7 +91,6 @@ function setWorkingProject(projectId) {
         spinner = ora("Applying config").start();
 
         const patternStart = "firebase.initializeApp(";
-
         const config = stdout.substring(
           stdout.indexOf(patternStart) + patternStart.length,
           stdout.indexOf("});") + 1
@@ -112,9 +107,9 @@ function setWorkingProject(projectId) {
       }
     }
   );
-}
+};
 
-function writeConfigToFile(newConfig) {
+writeConfigToFile = newConfig => {
   fs.writeFile(
     "./src/.combust/config.js",
     "export const firebaseConfig = " + newConfig,
@@ -122,7 +117,7 @@ function writeConfigToFile(newConfig) {
       err && console.log("err updating config:" + err);
     }
   );
-}
+};
 
 //OLD WAY - might be necessary to use the api later
 // const api = require("../node_modules/firebase-tools/lib/api");
