@@ -1,8 +1,6 @@
-const prompt = require("prompt");
 const shell = require("shelljs");
 const fs = require("fs");
 const ora = require("ora");
-const Radio = require("prompt-radio");
 
 const {
   getFirebaseProjects,
@@ -13,6 +11,7 @@ const {
   currentDirIsCombustApp,
   nonCombustAppErr
 } = require("../helpers/fs_helper.js");
+const { getRadioInput } = require("../helpers/input_helper.js");
 
 module.exports = function(dbSpecified) {
   if (!currentDirIsCombustApp()) {
@@ -49,26 +48,14 @@ printAvailableProjects = projects => {
 };
 
 getUserChoice = (projectNames, callback) => {
-  const prompt = new Radio({
-    name: "applications",
-    message: "Select an application:",
-    choices: projectNames
-  });
-  prompt.ask(answer => {
-    if (answer === undefined) {
-      //user pressed enter w/o selecting w/ space
-      console.log(
-        "\nErr: ".red +
-          "Select an application with " +
-          "space".green +
-          ", confirm with " +
-          "enter\n".green
-      );
-      return getUserChoice(projectNames, callback);
-    } else {
-      return callback(answer);
-    }
-  });
+  getRadioInput(
+    {
+      name: "applications",
+      message: "Select an application:",
+      choices: projectNames
+    },
+    callback
+  );
 };
 
 setWorkingProject = projectId => {
