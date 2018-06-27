@@ -1,10 +1,10 @@
-const shell = require("shelljs");
 const fs = require("fs");
+const ncp = require("ncp");
+
 const {
   executeInstallInstructions,
   updateDatabaseRules
 } = require("../command_handlers/install.js");
-const { getFirebaseProjects } = require("../helpers/firebase_helper.js");
 const {
   isCurrentDirCombustApp,
   mkdirSync,
@@ -15,8 +15,7 @@ const {
   replaceAll,
   replaceTitleOccurrences
 } = require("../helpers/string_helper.js");
-const ncp = require("ncp");
-const path = require("path");
+
 const templatePath = __dirname + "/../templates/";
 
 module.exports = (moduleTitle, fieldsAndVals) => {

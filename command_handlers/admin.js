@@ -1,9 +1,9 @@
-let shell = require("shelljs");
-const ora = require("ora");
+const shell = require("shelljs");
 const colors = require("colors");
 const prompt = require("prompt");
 const firebase = require("firebase");
 const fs = require("fs");
+
 const {
   initializeFirebase,
   loginWithMockAccount

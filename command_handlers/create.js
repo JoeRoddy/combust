@@ -1,12 +1,11 @@
-const shell = require("shelljs");
 const fs = require("fs");
+const shell = require("shelljs");
 const ora = require("ora");
 const colors = require("colors");
 
 const { getFirebaseProjects } = require("../helpers/firebase_helper.js");
 const { getRadioInput } = require("../helpers/input_helper.js");
 
-//eventually: mobile, web, && dual (mobile & web)
 module.exports = (projectTitle, projectType) => {
   projectTitle = projectTitle || "myCombustApp";
   if (fs.existsSync(projectTitle)) {

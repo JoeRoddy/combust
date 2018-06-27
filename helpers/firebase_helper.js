@@ -1,7 +1,9 @@
 const fs = require("fs");
 const shell = require("shelljs");
 const firebase = require("firebase");
-const { isCurrentDirCombustApp, nonCombustAppErr } = require("./fs_helper.js");
+
+const { nonCombustAppErr } = require("./fs_helper.js");
+
 const COMBUST_EMAIL = "do_not_delete@combustjs.org";
 const COMBUST_PASS = "temporaryPass";
 

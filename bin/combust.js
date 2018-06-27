@@ -1,10 +1,8 @@
 #! /usr/bin/env node
-var shell = require("shelljs");
-var yargs = require("yargs");
-let create = require("../command_handlers/create.js");
-let { install } = require("../command_handlers/install.js");
-let configure = require("../command_handlers/configure.js");
-let generate = require("../command_handlers/generate.js");
+const create = require("../command_handlers/create.js");
+const { install } = require("../command_handlers/install.js");
+const configure = require("../command_handlers/configure.js");
+const generate = require("../command_handlers/generate.js");
 
 require("yargs") // eslint-disable-line
   .command(
