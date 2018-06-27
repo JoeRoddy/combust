@@ -168,13 +168,17 @@ function insertComponentsAndExecuteInstructions(context) {
       );
       createPlaceholderMobileComponent(moduleName);
       executeInstallInstructions(getDefaultInstallInstrucForMobile(moduleName));
+    } else {
+      shell.exec(
+        `mv ${tempFolder}/package/${
+          platform === "mobile" ? "mobile_components" : "components"
+        }/* ${isDualProject ? platform + "/" : ""}${componentsPath}`
+      );
+      executeInstallInstructions(
+        installInstructions,
+        isDualProject ? platform : null
+      );
     }
-    shell.exec(
-      `mv ${tempFolder}/package/${
-        platform === "mobile" ? "mobile_components" : "components"
-      }/* ${isDualProject ? platform + "/" : ""}${componentsPath}`
-    );
-    executeInstallInstructions(installInstructions, platform);
   });
 }
 
@@ -285,8 +289,9 @@ function getDefaultInstallInstrucForMobile(moduleName) {
 }
 
 function updateDatabaseRules(rules) {
+  const isDual = getProjectType() === "dual";
   const dbRulesPath = `./${
-    isDualProject ? "shared" : "src"
+    isDual ? "shared" : "src"
   }/.combust/database.rules.json`;
   let dirtyJson = fs.readFileSync(dbRulesPath, "utf8");
   let rulesFile = JSON.parse(stripJsonComments(dirtyJson));
@@ -304,7 +309,7 @@ function updateDatabaseRules(rules) {
   //save & publish
   const rulesContent = JSON.stringify(rulesFile, null, 2);
   fs.writeFileSync(dbRulesPath, rulesContent);
-  if (isDualProject) {
+  if (isDual) {
     fs.writeFileSync(`./web/src/.combust/database.rules.json`, rulesContent);
   }
 
@@ -318,7 +323,7 @@ function updateDatabaseRules(rules) {
   console.log("\npublishing new database rules");
   const { stdout, stderr, code } = shell.exec(
     `${
-      isDualProject ? "cd web &&" : ""
+      isDual ? "cd web &&" : ""
     }firebase deploy --only database --project ${projectId}`,
     {
       silent: true
@@ -345,7 +350,7 @@ function updateDatabaseRules(rules) {
  * @param {string} dualProjectPlatform - web | mobile - unneccessary if not dual plat
  */
 function executeInstallInstructions(installInstructions, dualProjectPlatform) {
-  const pathPrefix = isDualProject ? `${dualProjectPlatform}/` : "";
+  const pathPrefix = dualProjectPlatform ? `${dualProjectPlatform}/` : "";
   installInstructions &&
     Object.keys(installInstructions).forEach(path => {
       // src/${path} ||  mobile/src/${path} ||  web/src/${path}
@@ -364,18 +369,22 @@ function executeInstallInstructions(installInstructions, dualProjectPlatform) {
 }
 
 function addNpmDependenciesToQue(instructions, projectType) {
-  const newNpmDeps = instructions
-    ? instructions[
-        `npm_dependencies${
-          projectType === "mobile" ? "_mobile" : "installation"
-        }`
-      ]
-    : null;
+  if (!instructions) return;
 
-  if (projectType === "web") {
+  const addWebDependenciesToQue = () => {
+    const newNpmDeps = instructions.npm_dependencies;
     webNpmDependencies = Object.assign(webNpmDependencies, newNpmDeps);
-  } else if (projectType === "mobile") {
+  };
+  const addMobileDependenciesToQue = () => {
+    const newNpmDeps = instructions.npm_dependencies_mobile;
     mobileNpmDependencies = Object.assign(mobileNpmDependencies, newNpmDeps);
+  };
+
+  if (projectType === "web" || projectType === "dual") {
+    addWebDependenciesToQue();
+  }
+  if (projectType === "mobile" || projectType === "dual") {
+    addMobileDependenciesToQue();
   }
 }
 
@@ -407,8 +416,9 @@ function installNpmDependenciesForPlatform(platform, callback) {
     platform === "web" ? webNpmDependencies : mobileNpmDependencies;
   if (Object.keys(npmDependencies).length === 0) return callback();
   const spinner = ora(
-    `Installing npm dependencies${isDualProject ? `for ${platform}` : ""}`
+    `Installing npm dependencies${isDualProject ? ` for ${platform}` : ""}`
   ).start();
+
   let dependencyString = ``;
   for (let key in npmDependencies) {
     dependencyString += `${key}@${npmDependencies[key]} `;
