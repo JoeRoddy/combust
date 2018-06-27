@@ -29,9 +29,6 @@ cloneAndInstallProject = (
   optionalPath,
   callback
 ) => {
-  if (projectType === DUAL_PLATFORM) {
-    return createDualPlatProject(projectTitle);
-  }
   const projectPath = optionalPath ? optionalPath + projectTitle : projectTitle;
   const repoUrl = repos[projectType];
   console.log("Cloning repository");
@@ -40,17 +37,19 @@ cloneAndInstallProject = (
       optionalPath ? `cd ${optionalPath} &&` : ""
     } git init ${projectTitle} && cd ${projectTitle} && git pull ${repoUrl}`
   );
-  getFirebaseProjects((err, projects) => {
-    if (!err) {
-      fs.writeFile(
-        `${projectPath}/src/.combust/availApps.json`,
-        JSON.stringify(projects),
-        err => {
-          if (err) throw err;
-        }
-      );
-    }
-  }, true);
+
+  projectType !== DUAL_PLATFORM &&
+    getFirebaseProjects((err, projects) => {
+      if (!err) {
+        fs.writeFile(
+          `${projectPath}/src/.combust/availApps.json`,
+          JSON.stringify(projects),
+          err => {
+            if (err) throw err;
+          }
+        );
+      }
+    }, true);
 
   const spinner = ora("Installing npm dependencies").start();
   const { stdout, stderr, code } = shell.exec(
@@ -59,6 +58,9 @@ cloneAndInstallProject = (
     () => {
       spinner.clear();
       spinner.stop();
+      if (projectType === DUAL_PLATFORM) {
+        return createDualPlatProject(projectTitle);
+      }
       if (!optionalPath) printSuccess(projectPath);
       callback && callback();
     }
@@ -66,7 +68,6 @@ cloneAndInstallProject = (
 };
 
 createDualPlatProject = projectTitle => {
-  mkdirSync(projectTitle);
   console.log("\nCreating web project..\n".yellow);
   cloneAndInstallProject(WEB, "web", projectTitle + "/", () => {
     console.log("\nCreating mobile project..\n".yellow);
