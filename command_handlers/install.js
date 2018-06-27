@@ -7,7 +7,7 @@ const tmp = require("tmp");
 
 const { getUserAdmins, updateData } = require("../helpers/firebase_helper");
 const {
-  currentDirIsCombustApp,
+  isCurrentDirCombustApp,
   mkdirSync,
   nonCombustAppErr,
   getProjectType
@@ -18,7 +18,7 @@ let rules = {};
 let npmDependencies = {};
 
 function install(moduleName, isDependency, callback) {
-  if (!currentDirIsCombustApp()) {
+  if (!isCurrentDirCombustApp()) {
     return console.error(nonCombustAppErr);
   } else if (!moduleName)
     return console.error(

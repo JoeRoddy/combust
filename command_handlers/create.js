@@ -5,7 +5,6 @@ const colors = require("colors");
 
 const { getFirebaseProjects } = require("../helpers/firebase_helper.js");
 const { getRadioInput } = require("../helpers/input_helper.js");
-const { mkdirSync } = require("../helpers/fs_helper.js");
 
 //eventually: mobile, web, && dual (mobile & web)
 module.exports = (projectTitle, projectType) => {

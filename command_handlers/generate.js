@@ -6,7 +6,7 @@ const {
 } = require("../command_handlers/install.js");
 const { getFirebaseProjects } = require("../helpers/firebase_helper.js");
 const {
-  currentDirIsCombustApp,
+  isCurrentDirCombustApp,
   mkdirSync,
   nonCombustAppErr,
   getProjectType
@@ -20,7 +20,7 @@ const path = require("path");
 const templatePath = __dirname + "/../templates/";
 
 module.exports = (moduleTitle, fieldsAndVals) => {
-  if (!currentDirIsCombustApp()) {
+  if (!isCurrentDirCombustApp()) {
     return console.error(nonCombustAppErr);
   }
 

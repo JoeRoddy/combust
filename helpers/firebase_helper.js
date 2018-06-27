@@ -1,7 +1,7 @@
 const fs = require("fs");
 const shell = require("shelljs");
 const firebase = require("firebase");
-const { nonCombustAppErr } = require("./fs_helper.js");
+const { isCurrentDirCombustApp, nonCombustAppErr } = require("./fs_helper.js");
 const COMBUST_EMAIL = "do_not_delete@combustjs.org";
 const COMBUST_PASS = "temporaryPass";
 
@@ -19,10 +19,6 @@ const getFirebaseProjects = (callback, isSilent) => {
     }
     return _getDatabasesFromFirebaseListOutput(stdout, callback);
   });
-};
-
-const currentDirIsCombustApp = () => {
-  return fs.existsSync("./src/.combust");
 };
 
 const getUserAdmins = () => {
@@ -121,7 +117,6 @@ module.exports = {
   getFirebaseProjects,
   isFirebaseCliInstalled,
   firebaseCliErr,
-  currentDirIsCombustApp,
   getUserAdmins,
   updateData
 };

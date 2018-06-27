@@ -8,13 +8,13 @@ const {
   firebaseCliErr
 } = require("../helpers/firebase_helper.js");
 const {
-  currentDirIsCombustApp,
+  isCurrentDirCombustApp,
   nonCombustAppErr
 } = require("../helpers/fs_helper.js");
 const { getRadioInput } = require("../helpers/input_helper.js");
 
 module.exports = function(dbSpecified) {
-  if (!currentDirIsCombustApp()) {
+  if (!isCurrentDirCombustApp()) {
     return console.error(nonCombustAppErr);
   }
   if (!isFirebaseCliInstalled()) {
