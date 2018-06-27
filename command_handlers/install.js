@@ -10,12 +10,15 @@ const {
   isCurrentDirCombustApp,
   mkdirSync,
   nonCombustAppErr,
+  getConfiguredFirebaseProjectId,
   getProjectType
 } = require("../helpers/fs_helper");
 const { replaceTitleOccurrences } = require("../helpers/string_helper.js");
 
 let rules = {};
-let npmDependencies = {};
+let mobileNpmDependencies = {};
+let webNpmDependencies = {};
+let isDualProject = false;
 
 function install(moduleName, isDependency, callback) {
   if (!isCurrentDirCombustApp()) {
@@ -26,11 +29,13 @@ function install(moduleName, isDependency, callback) {
     );
   moduleName.toLowerCase();
 
-  const firstCap = moduleName.charAt(0).toUpperCase() + moduleName.substring(1);
-  const storePath = `src/stores/`;
-  const dbPath = `src/db/`;
-  const componentsPath = `src/components/${moduleName}`;
   const projectType = getProjectType();
+  isDualProject = projectType === "dual";
+
+  const firstCap = moduleName.charAt(0).toUpperCase() + moduleName.substring(1);
+  const storePath = isDualProject ? `shared/stores/` : `src/stores/`;
+  const dbPath = isDualProject ? `shared/db` : `src/db/`;
+  const componentsPath = `src/components/${moduleName}`;
 
   if (
     fs.existsSync(storePath + firstCap + "Store.js") ||
@@ -87,10 +92,19 @@ function install(moduleName, isDependency, callback) {
         .then(a => {
           const storeFile = fs.readdirSync(`${tempFolder}/package/stores`)[0];
 
+          if (isDualProject) {
+            ["web", "mobile"].forEach(platform => {
+              mkdirSync(`${platform}/src/stores`);
+              mkdirSync(`${platform}/src/db`);
+              mkdirSync(`${platform}/${componentsPath}`);
+            });
+          } else {
+            mkdirSync("src/stores");
+            mkdirSync("src/db");
+            mkdirSync(componentsPath);
+          }
+
           //extract files we need and move to src
-          mkdirSync("src/stores");
-          mkdirSync("src/db");
-          mkdirSync(componentsPath);
           shell.exec(`mv -v ${tempFolder}/package/stores/* ${storePath}`, {
             silent: true
           });
@@ -99,32 +113,13 @@ function install(moduleName, isDependency, callback) {
           });
           if (instructions.rules) rules[moduleName] = instructions.rules;
 
-          //execute installation instructions
-          let installInstructions = instructions
-            ? instructions[
-                projectType === "mobile"
-                  ? "installation_mobile"
-                  : "installation"
-              ]
-            : null;
-          if (projectType === "mobile" && !installInstructions) {
-            console.log(
-              "Mobile components not supplied for " +
-                moduleName.cyan +
-                " module"
-            );
-            createPlaceholderMobileComponent(moduleName);
-            executeInstallInstructions(
-              getDefaultInstallInstrucForMobile(moduleName)
-            );
-          } else {
-            shell.exec(
-              `mv ${tempFolder}/package/${
-                projectType === "mobile" ? "mobile_components" : "components"
-              }/* ${componentsPath}`
-            );
-            executeInstallInstructions(installInstructions);
-          }
+          insertComponentsAndExecuteInstructions({
+            instructions,
+            projectType,
+            moduleName,
+            tempFolder,
+            componentsPath
+          });
 
           updateCombustConfig(storeFile);
           shell.exec(`rm -rf ${tempFolder}`);
@@ -150,6 +145,37 @@ function install(moduleName, isDependency, callback) {
         });
     });
   // return;
+}
+
+function insertComponentsAndExecuteInstructions(context) {
+  const {
+    componentsPath,
+    instructions,
+    projectType,
+    moduleName,
+    tempFolder
+  } = context;
+  const platforms = isDualProject ? ["web", "mobile"] : [projectType];
+  platforms.forEach(platform => {
+    const installInstructions = instructions
+      ? instructions[
+          platform === "mobile" ? "installation_mobile" : "installation"
+        ]
+      : null;
+    if (platform === "mobile" && !installInstructions) {
+      console.log(
+        "Mobile components not supplied for " + moduleName.cyan + " module"
+      );
+      createPlaceholderMobileComponent(moduleName);
+      executeInstallInstructions(getDefaultInstallInstrucForMobile(moduleName));
+    }
+    shell.exec(
+      `mv ${tempFolder}/package/${
+        platform === "mobile" ? "mobile_components" : "components"
+      }/* ${isDualProject ? platform + "/" : ""}${componentsPath}`
+    );
+    executeInstallInstructions(installInstructions, platform);
+  });
 }
 
 /**
@@ -212,7 +238,9 @@ function createPlaceholderMobileComponent(moduleName) {
       data = replaceTitleOccurrences(title, data);
 
       const fileName = title + ".js";
-      const filePath = `src/components/${moduleName}/${fileName}`;
+      const filePath = `${
+        isDualProject ? "mobile/" : ""
+      }src/components/${moduleName}/${fileName}`;
       fs.writeFile(filePath, data, err => {
         console.log(
           err
@@ -257,7 +285,9 @@ function getDefaultInstallInstrucForMobile(moduleName) {
 }
 
 function updateDatabaseRules(rules) {
-  const dbRulesPath = "./src/.combust/database.rules.json";
+  const dbRulesPath = `./${
+    isDualProject ? "shared" : "src"
+  }/.combust/database.rules.json`;
   let dirtyJson = fs.readFileSync(dbRulesPath, "utf8");
   let rulesFile = JSON.parse(stripJsonComments(dirtyJson));
   let currentRules = rulesFile.rules;
@@ -272,11 +302,24 @@ function updateDatabaseRules(rules) {
   }
 
   //save & publish
-  fs.writeFileSync(dbRulesPath, JSON.stringify(rulesFile, null, 2));
-  console.log("\npublishing new database rules");
+  const rulesContent = JSON.stringify(rulesFile, null, 2);
+  fs.writeFileSync(dbRulesPath, rulesContent);
+  if (isDualProject) {
+    fs.writeFileSync(`./web/src/.combust/database.rules.json`, rulesContent);
+  }
 
+  const projectId = getConfiguredFirebaseProjectId();
+  if (!projectId)
+    return console.log(
+      "\nApp not yet configured, skipping rules publishing.  To publish firebase rules manually, run:\n" +
+        "firebase deploy --only database".cyan
+    );
+
+  console.log("\npublishing new database rules");
   const { stdout, stderr, code } = shell.exec(
-    "firebase deploy --only database",
+    `${
+      isDualProject ? "cd web &&" : ""
+    }firebase deploy --only database --project ${projectId}`,
     {
       silent: true
     }
@@ -296,11 +339,17 @@ function updateDatabaseRules(rules) {
   }
 }
 
-function executeInstallInstructions(installInstructions) {
-  // console.log("exec install called w/:", installInstructions);
+/**
+ * executes install instructions for web or mobile
+ * @param {Object} installInstructions
+ * @param {string} dualProjectPlatform - web | mobile - unneccessary if not dual plat
+ */
+function executeInstallInstructions(installInstructions, dualProjectPlatform) {
+  const pathPrefix = isDualProject ? `${dualProjectPlatform}/` : "";
   installInstructions &&
     Object.keys(installInstructions).forEach(path => {
-      const filePath = "src/" + path;
+      // src/${path} ||  mobile/src/${path} ||  web/src/${path}
+      const filePath = `${pathPrefix}src/${path}`;
       let file = fs.readFileSync(filePath);
       const fileInstructions = installInstructions[path];
       Object.keys(fileInstructions).forEach(operation => {
@@ -310,31 +359,64 @@ function executeInstallInstructions(installInstructions) {
         } //windows is funnnnnnnnnnn....
         file = operationsMap[operation](file, linesToInsert);
       });
-
       fs.writeFileSync(filePath, file);
     });
 }
 
 function addNpmDependenciesToQue(instructions, projectType) {
-  const npmDeps = instructions
+  const newNpmDeps = instructions
     ? instructions[
         `npm_dependencies${
           projectType === "mobile" ? "_mobile" : "installation"
         }`
       ]
     : null;
-  npmDependencies = Object.assign(npmDependencies, npmDeps);
+
+  if (projectType === "web") {
+    webNpmDependencies = Object.assign(webNpmDependencies, newNpmDeps);
+  } else if (projectType === "mobile") {
+    mobileNpmDependencies = Object.assign(mobileNpmDependencies, newNpmDeps);
+  }
 }
 
 function installNpmDependencies(callback = () => {}) {
+  const projectType = getProjectType();
+  const platformsToInstall =
+    projectType === "dual" ? ["web", "mobile"] : [projectType];
+
+  //move to promise or async/await eventually,
+  //basically doing the same thing w/callbacks here
+  let currentPlatformIndex = 0;
+  const recursiveInstall = platform => {
+    installNpmDependenciesForPlatform(platform, () => {
+      currentPlatformIndex++;
+      if (currentPlatformIndex < platformsToInstall.length) {
+        recursiveInstall(platformsToInstall[currentPlatformIndex]);
+      } else {
+        //done
+        callback();
+      }
+    });
+  };
+
+  recursiveInstall(platformsToInstall[0]);
+}
+
+function installNpmDependenciesForPlatform(platform, callback) {
+  const npmDependencies =
+    platform === "web" ? webNpmDependencies : mobileNpmDependencies;
   if (Object.keys(npmDependencies).length === 0) return callback();
-  const spinner = ora("Installing npm dependencies").start();
+  const spinner = ora(
+    `Installing npm dependencies${isDualProject ? `for ${platform}` : ""}`
+  ).start();
   let dependencyString = ``;
   for (let key in npmDependencies) {
     dependencyString += `${key}@${npmDependencies[key]} `;
   }
   const { stdout, stderr, code } = shell.exec(
-    `npm install --silent --save ${dependencyString}`,
+    `${
+      isDualProject ? `cd ${platform} &&` : ""
+    }npm install --silent --save ${dependencyString}`,
     { async: true, silent: true },
     () => {
       spinner.clear();
@@ -345,7 +427,7 @@ function installNpmDependencies(callback = () => {}) {
 }
 
 function updateCombustConfig(storeName) {
-  const filePath = "src/.combust/init.js";
+  const filePath = `${isDualProject ? "shared" : "src"}/.combust/init.js`;
   let firstCap = storeName.substring(0, storeName.length - 3);
   let lowered = firstCap;
   lowered = lowered.charAt(0).toLowerCase() + lowered.substring(1);
