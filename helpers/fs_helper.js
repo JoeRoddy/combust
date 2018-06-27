@@ -21,6 +21,22 @@ const nonCombustAppErr =
   "Not a combust app. Change directories, or create one with: " +
   "combust create [projectTitle]".cyan;
 
+const getConfiguredFirebaseProjectId = () => {
+  const firebaseConfigPath = `./${
+    getProjectType() === "dual" ? "shared" : "src"
+  }/.combust/config.js`;
+  const content = fs.readFileSync(firebaseConfigPath, "utf8");
+
+  //TODO: port to firebaseConfig.json.  this is horrible atm.
+  const pattern = '"projectId": "';
+  const firstSlice = content.substring(
+    content.indexOf(pattern) + pattern.length
+  );
+  const projId = firstSlice.substring(0, firstSlice.indexOf('"'));
+
+  return projId;
+};
+
 /**
  * makes nested directories,
  * ie: mkdirSync("a/b/c");
@@ -60,6 +76,7 @@ function cpFolderRecursively(source, destination, callback) {
 
 module.exports = {
   cpFolderRecursively,
+  getConfiguredFirebaseProjectId,
   getProjectType,
   isCurrentDirCombustApp,
   nonCombustAppErr,

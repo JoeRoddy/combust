@@ -57,65 +57,87 @@ const convertToObjArray = function(fieldsAndVals) {
   });
 };
 
+// TODO: make this less disgusting
 const createFiles = function(moduleTitle, fieldsAndVals, projectType) {
   const singularTitle =
     moduleTitle.charAt(moduleTitle.length - 1).toUpperCase() === "S"
       ? moduleTitle.substring(0, moduleTitle.length - 1)
       : moduleTitle;
-
   const capped =
     singularTitle.charAt(0).toUpperCase() + singularTitle.substring(1);
+  const componentFolderTitle = singularTitle.toLowerCase() + "s";
+
+  const isDual = projectType === "dual";
+
+  //atm this writes the db && store files to 'shared' twice on dual plats
+  const platforms = isDual ? ["web", "mobile"] : [projectType];
+
   ["db/", "stores/", "components/"].forEach(folder => {
-    let folderPath = templatePath + folder;
-    if (folder === "components/") {
-      folderPath += projectType + "/";
-      const componentPath = `./src/components/${singularTitle.toLowerCase()}s`;
-      mkdirSync(componentPath);
-      if (projectType === "web") {
-        try {
-          ncp(
-            //cp -r
-            templatePath + "components/web/styles/",
-            componentPath + "/styles/",
-            function(err) {
-              if (err) return console.error(err);
-              fs.rename(
-                `${componentPath}/styles/Items.scss`,
-                `${componentPath}/styles/${capped}s.scss`,
-                err => {
-                  err && console.error(err);
-                }
-              );
-            }
-          );
-        } catch (err) {
-          console.log(err);
+    const isComponentFolder = folder === "components/";
+
+    platforms.forEach(platform => {
+      const fullTemplateFolderPath = `${templatePath + folder}${
+        isComponentFolder ? platform + "/" : ""
+      }`;
+      const destinationFolder = isDual
+        ? isComponentFolder
+          ? `./${platform}/src/${folder}${componentFolderTitle}`
+          : `./shared/${folder}`
+        : `./src/${folder}${
+            isComponentFolder ? `/${componentFolderTitle}` : ""
+          }`;
+
+      if (isComponentFolder) {
+        //prepare directories
+        mkdirSync(destinationFolder);
+        if (platform === "web") {
+          try {
+            ncp(
+              //cp -r
+              templatePath + "components/web/styles/",
+              destinationFolder + "/styles/",
+              function(err) {
+                if (err) return console.error(err);
+                fs.rename(
+                  `${destinationFolder}/styles/Items.scss`,
+                  `${destinationFolder}/styles/${capped}s.scss`,
+                  err => {
+                    err && console.error(err);
+                  }
+                );
+              }
+            );
+          } catch (err) {
+            console.log(err);
+          }
         }
       }
 
-      folder += singularTitle.toLowerCase() + "s";
-    }
-    fs.readdir(folderPath, (err, files) => {
-      files &&
-        files.forEach(file => {
-          fs.readFile(folderPath + file, "utf8", (err, data) => {
-            if (err && err.toString().startsWith(readFolderErr)) {
-              return;
-            } else if (err) throw err;
+      fs.readdir(fullTemplateFolderPath, (err, files) => {
+        files &&
+          files.forEach(file => {
+            fs.readFile(fullTemplateFolderPath + file, "utf8", (err, data) => {
+              if (err && err.toString().startsWith(readFolderErr)) {
+                return;
+              } else if (err) throw err;
 
-            data = replaceTitleOccurrences(singularTitle, data);
-            data = insertFieldsAndDefaultVals(data, fieldsAndVals);
-            const fileName = file.replace("Item", capped);
+              data = replaceTitleOccurrences(singularTitle, data);
+              data = insertFieldsAndDefaultVals(data, fieldsAndVals);
+              const fileName = file.replace("Item", capped);
 
-            fs.writeFile(`./src/${folder}/${fileName}`, data, err => {
-              console.log(
-                err ? "err updating file:" + err : "created file: " + fileName
-              );
+              const fileDestinationPath = `${destinationFolder}/${fileName}`;
+
+              fs.writeFile(fileDestinationPath, data, err => {
+                console.log(
+                  err ? "err updating file:" + err : "created file: " + fileName
+                );
+              });
             });
           });
-        });
+      });
     });
   });
+
   createDbRules(singularTitle);
 };
 
@@ -145,19 +167,23 @@ const insertFieldsAndDefaultVals = function(fileData, fieldsAndVals) {
 };
 
 const addNewRoutes = function(moduleTitle, projectType) {
-  const singularTitle =
-    moduleTitle.charAt(moduleTitle.length - 1).toUpperCase() === "S"
-      ? moduleTitle.substring(0, moduleTitle.length - 1)
-      : moduleTitle;
-  const ending = singularTitle.substring(1);
-  const capitalizedTitle = singularTitle.charAt(0).toUpperCase() + ending;
-  const lowerCaseTitle = singularTitle.charAt(0).toLowerCase() + ending;
-  const instructions =
-    projectType === "mobile"
-      ? getInstructionsForMobileRoutes(capitalizedTitle, lowerCaseTitle)
-      : getInstructionsForWebRoutes(capitalizedTitle, lowerCaseTitle);
+  const isDualPlat = projectType === "dual";
+  const platforms = isDualPlat ? ["web", "mobile"] : [projectType];
+  platforms.forEach(platform => {
+    const singularTitle =
+      moduleTitle.charAt(moduleTitle.length - 1).toUpperCase() === "S"
+        ? moduleTitle.substring(0, moduleTitle.length - 1)
+        : moduleTitle;
+    const ending = singularTitle.substring(1);
+    const capitalizedTitle = singularTitle.charAt(0).toUpperCase() + ending;
+    const lowerCaseTitle = singularTitle.charAt(0).toLowerCase() + ending;
+    const instructions =
+      platform === "mobile"
+        ? getInstructionsForMobileRoutes(capitalizedTitle, lowerCaseTitle)
+        : getInstructionsForWebRoutes(capitalizedTitle, lowerCaseTitle);
 
-  executeInstallInstructions(instructions);
+    executeInstallInstructions(instructions, isDualPlat ? platform : null);
+  });
 };
 
 const getInstructionsForWebRoutes = function(capped, lowered) {
