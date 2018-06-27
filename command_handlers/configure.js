@@ -42,12 +42,6 @@ module.exports = function(dbSpecified) {
   });
 };
 
-printAvailableProjects = projects => {
-  projects.forEach((project, i) => {
-    console.log(`(${i + 1}): ${project.id}`);
-  });
-};
-
 getUserChoice = (projectNames, callback) => {
   getRadioInput(
     {
@@ -60,8 +54,6 @@ getUserChoice = (projectNames, callback) => {
 };
 
 setWorkingProject = projectId => {
-  console.log("setting proj w/id:", projectId);
-
   spinner = ora("Fetching the configuration").start();
   shell.exec("firebase use --add " + projectId, {
     silent: true
