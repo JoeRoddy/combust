@@ -8,6 +8,7 @@ const {
   firebaseCliErr
 } = require("../helpers/firebase_helper.js");
 const {
+  getProjectType,
   isCurrentDirCombustApp,
   nonCombustAppErr
 } = require("../helpers/fs_helper.js");
@@ -59,12 +60,15 @@ getUserChoice = (projectNames, callback) => {
 };
 
 setWorkingProject = projectId => {
+  console.log("setting proj w/id:", projectId);
+
   spinner = ora("Fetching the configuration").start();
   shell.exec("firebase use --add " + projectId, {
     silent: true
   });
+
   shell.exec(
-    "firebase setup:web",
+    `firebase setup:web --project ${projectId}`,
     {
       silent: true,
       async: true
@@ -75,30 +79,34 @@ setWorkingProject = projectId => {
       if (stderr) {
         console.log("err:", stderr);
       } else {
-        spinner = ora("Applying config").start();
-
-        const patternStart = "firebase.initializeApp(";
-        const config = stdout.substring(
-          stdout.indexOf(patternStart) + patternStart.length,
-          stdout.indexOf("});") + 1
-        );
-        writeConfigToFile(config);
-        spinner.clear();
-        spinner.stop();
-
-        console.log(
-          "\nApplied new configuration to: " +
-            "src/.combust/config".green +
-            "\n\nAwesome! Firebase should be all hooked up!".yellow
-        );
+        writeOutputToFirebaseConfig(stdout);
       }
     }
   );
 };
 
+writeOutputToFirebaseConfig = stdout => {
+  spinner = ora("Applying config").start();
+  const patternStart = "firebase.initializeApp(";
+  const config = stdout.substring(
+    stdout.indexOf(patternStart) + patternStart.length,
+    stdout.indexOf("});") + 1
+  );
+  writeConfigToFile(config);
+  spinner.clear();
+  spinner.stop();
+
+  console.log(
+    "\nApplied new configuration to: " +
+      "src/.combust/config".green +
+      "\n\nAwesome! Firebase should be all hooked up!".yellow
+  );
+};
+
 writeConfigToFile = newConfig => {
+  const topLevelDir = getProjectType() === "dual" ? "shared" : "src";
   fs.writeFile(
-    "./src/.combust/config.js",
+    `./${topLevelDir}/.combust/config.js`,
     "export const firebaseConfig = " + newConfig,
     err => {
       err && console.log("err updating config:" + err);
