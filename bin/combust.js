@@ -9,7 +9,7 @@ let generate = require("../command_handlers/generate.js");
 require("yargs") // eslint-disable-line
   .command(
     "create [title]",
-    "create a web project",
+    "create a project",
     yargs => {
       yargs.positional("title", {
         describe: "project title",
@@ -18,19 +18,6 @@ require("yargs") // eslint-disable-line
     },
     argv => {
       create(argv.title);
-    }
-  )
-  .command(
-    "mobile [title]",
-    "create a mobile project",
-    yargs => {
-      yargs.positional("title", {
-        describe: "project title",
-        default: null
-      });
-    },
-    argv => {
-      create(argv.title, "mobile");
     }
   )
   .command(
