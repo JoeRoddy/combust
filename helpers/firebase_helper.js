@@ -126,14 +126,13 @@ module.exports = {
 function _getFirebaseConfig() {
   let f;
   try {
-    f = fs.readFileSync("src/.combust/config.js").toString();
+    f = fs.readFileSync("src/.combust/firebase.config.json").toString();
   } catch (err) {
     throw nonCombustAppErr;
   }
   let config;
   try {
-    config = f.substring(f.indexOf("{"), f.indexOf("}") + 1);
-    config = eval("(" + config + ")");
+    config = JSON.parse(f);
   } catch (err) {
     throw "App not configured w/firebase, run; " + "combust configure".cyan;
   }

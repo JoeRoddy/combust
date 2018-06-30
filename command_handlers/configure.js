@@ -90,7 +90,7 @@ writeOutputToFirebaseConfig = stdout => {
 
   console.log(
     "\nApplied new configuration to: " +
-      "src/.combust/config".green +
+      "src/.combust/firebase.config.json".green +
       "\n\nAwesome! Firebase should be all hooked up!".yellow
   );
 };
@@ -98,8 +98,8 @@ writeOutputToFirebaseConfig = stdout => {
 writeConfigToFile = newConfig => {
   const topLevelDir = getProjectType() === "dual" ? "shared" : "src";
   fs.writeFile(
-    `./${topLevelDir}/.combust/config.js`,
-    "export const firebaseConfig = " + newConfig,
+    `./${topLevelDir}/.combust/firebase.config.json`,
+    newConfig,
     err => {
       err && console.log("err updating config:" + err);
     }
