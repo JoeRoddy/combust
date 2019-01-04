@@ -36,33 +36,42 @@ cloneAndInstallProject = (
     } git init ${projectTitle} && cd ${projectTitle} && git pull ${repoUrl}`
   );
 
-  projectType !== DUAL_PLATFORM &&
-    getFirebaseProjects((err, projects) => {
-      if (!err) {
-        fs.writeFile(
-          `${projectPath}/src/.combust/availApps.json`,
-          JSON.stringify(projects),
-          err => {
-            if (err) throw err;
-          }
-        );
-      }
-    }, true);
+  projectType !== DUAL_PLATFORM && createFirebaseAvailAppFile(projectPath);
 
+  npmInstall(projectPath, err => {
+    if (projectType === DUAL_PLATFORM) {
+      return createDualPlatProject(projectTitle);
+    }
+    if (!optionalPath) printSuccess(projectPath);
+    callback && callback();
+  });
+};
+
+npmInstall = (path, callback) => {
   const spinner = ora("Installing npm dependencies").start();
   const { stdout, stderr, code } = shell.exec(
-    `cd ${projectPath} && npm install --silent`,
+    `cd ${path} && npm install --silent`,
     { async: true, silent: true },
     () => {
       spinner.clear();
       spinner.stop();
-      if (projectType === DUAL_PLATFORM) {
-        return createDualPlatProject(projectTitle);
-      }
-      if (!optionalPath) printSuccess(projectPath);
-      callback && callback();
+      callback();
     }
   );
+};
+
+createFirebaseAvailAppFile = projectPath => {
+  getFirebaseProjects((err, projects) => {
+    if (!err) {
+      fs.writeFile(
+        `${projectPath}/src/.combust/availApps.json`,
+        JSON.stringify(projects),
+        err => {
+          if (err) throw err;
+        }
+      );
+    }
+  }, true);
 };
 
 createDualPlatProject = projectTitle => {
