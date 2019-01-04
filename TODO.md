@@ -1,5 +1,8 @@
 # general
 
+- IMPORTANT: move db.rules.json && storage.rules OUT of src/
+  - move init.js from .combust -> /stores
+  - firebase.config.json -> /db
 - update modules to follow patterns set by generate templates
 - generate: support group owned items, multiple data objects per new service (ie chat: conversations, messages)
 
