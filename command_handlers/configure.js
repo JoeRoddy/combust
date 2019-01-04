@@ -46,7 +46,7 @@ getUserChoice = (projectNames, callback) => {
   getRadioInput(
     {
       name: "applications",
-      message: "Select an application:",
+      message: "Choose a firebase app to link to this project:",
       choices: projectNames
     },
     callback
