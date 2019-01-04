@@ -36,15 +36,12 @@ module.exports = async dbSpecified => {
   setWorkingProject(project.id);
 };
 
-getUserChoice = (projectNames, callback) =>
-  getRadioInput(
-    {
-      name: "applications",
-      message: "Choose a firebase app to link to this project:",
-      choices: projectNames
-    },
-    callback
-  );
+getUserChoice = projectNames =>
+  getRadioInput({
+    name: "applications",
+    message: "Choose a firebase app to link to this project:",
+    choices: projectNames
+  });
 
 setWorkingProject = projectId => {
   spinner = ora("Fetching the configuration").start();
