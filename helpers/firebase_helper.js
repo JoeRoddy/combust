@@ -165,9 +165,20 @@ function _getDatabasesFromFirebaseListOutput(stdout, callback) {
   dbRows.splice(0, 1); //remove label row
   let dbs = dbRows.map(row => {
     let [name, id, role] = row.split(" │ ").map(row => {
-      return row.replace("│", "").trim();
+      FIREBASE_CLI_TEXT_STYLES.forEach(pattern => {
+        row = row.replace(pattern, "");
+      });
+      return row.trim();
     });
     return { name, id, role };
   });
   callback(null, dbs);
 }
+
+const FIREBASE_CLI_TEXT_STYLES = [
+  "\u001b[1m",
+  "\u001b[39m",
+  "\u001b[22m",
+  "\u001b[36m",
+  "│"
+];
