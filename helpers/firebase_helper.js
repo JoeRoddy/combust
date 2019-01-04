@@ -7,19 +7,30 @@ const { nonCombustAppErr } = require("./fs_helper.js");
 const COMBUST_EMAIL = "do_not_delete@combustjs.org";
 const COMBUST_PASS = "temporaryPass";
 
-const getFirebaseProjects = (callback, isSilent) => {
-  shell.exec("firebase list", { silent: true }, (someShit, stdout, stderr) => {
-    if (!isSilent && stderr && stderr.includes("please run firebase login")) {
-      return console.error(
-        "\nYou must log in to the Firebase CLI first.\n\nTo install it, run: " +
-          "npm i -g firebase-tools".cyan +
-          "\n\nTo login: " +
-          "firebase login".cyan
-      );
-    } else if (!isSilent && stderr) {
-      return console.log(stderr);
-    }
-    return _getDatabasesFromFirebaseListOutput(stdout, callback);
+const getFirebaseProjects = isSilent => {
+  return new Promise((resolve, reject) => {
+    shell.exec(
+      "firebase list",
+      { silent: true },
+      (someShit, stdout, stderr) => {
+        if (
+          !isSilent &&
+          stderr &&
+          stderr.includes("Command requires authentication")
+        ) {
+          return reject(
+            "\nYou must log in to the Firebase CLI first.\n\nTo install it, run: " +
+              "npm i -g firebase-tools".cyan +
+              "\n\nTo login: " +
+              "firebase login\n".cyan
+          );
+        } else if (!isSilent && stderr) {
+          reject(stderr);
+        }
+        let dbs = _getDatabasesFromFirebaseListOutput(stdout);
+        resolve(dbs);
+      }
+    );
   });
 };
 
@@ -158,12 +169,12 @@ function _markAcctAsAdmin(uid) {
   return process.exit();
 }
 
-function _getDatabasesFromFirebaseListOutput(stdout, callback) {
+function _getDatabasesFromFirebaseListOutput(stdout) {
   let dbRows = stdout.split("\n").filter(row => {
     return row.includes("│ ");
   });
   dbRows.splice(0, 1); //remove label row
-  let dbs = dbRows.map(row => {
+  return dbRows.map(row => {
     let [name, id, role] = row.split(" │ ").map(row => {
       FIREBASE_CLI_TEXT_STYLES.forEach(pattern => {
         row = row.replace(pattern, "");
@@ -172,7 +183,6 @@ function _getDatabasesFromFirebaseListOutput(stdout, callback) {
     });
     return { name, id, role };
   });
-  callback(null, dbs);
 }
 
 const FIREBASE_CLI_TEXT_STYLES = [

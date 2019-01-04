@@ -61,18 +61,15 @@ npmInstall = path => {
   });
 };
 
-createFirebaseAvailAppFile = projectPath => {
-  getFirebaseProjects((err, projects) => {
-    if (!err) {
-      fs.writeFile(
-        `${projectPath}/src/.combust/availApps.json`,
-        JSON.stringify(projects),
-        err => {
-          if (err) throw err;
-        }
-      );
+createFirebaseAvailAppFile = async projectPath => {
+  let projects = await getFirebaseProjects(true);
+  fs.writeFile(
+    `${projectPath}/src/.combust/availApps.json`,
+    JSON.stringify(projects),
+    err => {
+      if (err) throw err;
     }
-  }, true);
+  );
 };
 
 createDualPlatSubProjects = async projectTitle => {
@@ -83,18 +80,12 @@ createDualPlatSubProjects = async projectTitle => {
   printSuccess(projectTitle);
 };
 
-promptForProjectType = () => {
-  return new Promise(resolve => {
-    getRadioInput(
-      {
-        name: "projectTypes",
-        message: "Select a project type:",
-        choices: [WEB, MOBILE, DUAL_PLATFORM]
-      },
-      choice => resolve(choice)
-    );
+promptForProjectType = () =>
+  getRadioInput({
+    name: "projectTypes",
+    message: "Select a project type:",
+    choices: [WEB, MOBILE, DUAL_PLATFORM]
   });
-};
 
 const WEB = " Web";
 const MOBILE = " Mobile";

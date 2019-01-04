@@ -14,10 +14,8 @@ const {
 } = require("../helpers/fs_helper.js");
 const { getRadioInput } = require("../helpers/input_helper.js");
 
-module.exports = function(dbSpecified) {
-  if (!isCurrentDirCombustApp()) {
-    return console.error(nonCombustAppErr);
-  }
+module.exports = async dbSpecified => {
+  if (!isCurrentDirCombustApp()) return console.error(nonCombustAppErr);
   if (!isFirebaseCliInstalled()) {
     return console.log(
       firebaseCliErr +
@@ -27,22 +25,18 @@ module.exports = function(dbSpecified) {
         "combust configure".cyan
     );
   }
-  if (dbSpecified) {
-    return setWorkingProject(dbSpecified);
-  }
-  getFirebaseProjects((err, projects) => {
-    if (!projects) return null;
-    if (err)
-      return console.log("Error retrieving your firebase projects:\n", err);
 
-    getUserChoice(projects, projectName => {
-      const project = projects.find(p => p.name === projectName);
-      setWorkingProject(project.id);
-    });
-  });
+  if (dbSpecified) return setWorkingProject(dbSpecified);
+
+  let projects = await getFirebaseProjects().catch(e => console.log(e));
+  if (!projects) return null;
+
+  const projectName = await getUserChoice(projects);
+  const project = projects.find(p => p.name === projectName);
+  setWorkingProject(project.id);
 };
 
-getUserChoice = (projectNames, callback) => {
+getUserChoice = (projectNames, callback) =>
   getRadioInput(
     {
       name: "applications",
@@ -51,7 +45,6 @@ getUserChoice = (projectNames, callback) => {
     },
     callback
   );
-};
 
 setWorkingProject = projectId => {
   spinner = ora("Fetching the configuration").start();
