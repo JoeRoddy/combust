@@ -2,13 +2,13 @@
   "name": "combust",
   "version": "1.0.19",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "bin": {
+    "cb": "bin/combust.js",
     "combust": "bin/combust.js"
   },
   "dependencies": {
