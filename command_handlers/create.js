@@ -6,85 +6,86 @@ const colors = require("colors");
 const { getFirebaseProjects } = require("../helpers/firebase_helper.js");
 const { getRadioInput } = require("../helpers/input_helper.js");
 
-module.exports = (projectTitle, projectType) => {
+module.exports = async (projectTitle, projectType) => {
   projectTitle = projectTitle || "myCombustApp";
-  if (fs.existsSync(projectTitle)) {
-    return console.error(
-      "Err: ".red + "Directory " + projectTitle.cyan + " already exists."
-    );
-  }
+  if (fs.existsSync(projectTitle)) return printProjExistsErr(projectTitle);
 
-  projectType
-    ? cloneAndInstallProject(projectType, projectTitle)
-    : promptForProjectType(projectType =>
-        cloneAndInstallProject(projectType, projectTitle)
-      );
+  projectType = projectType || (await promptForProjectType());
+  cloneAndInstallProject(projectType, projectTitle);
 };
 
-cloneAndInstallProject = (
-  projectType,
-  projectTitle,
-  optionalPath,
-  callback
-) => {
-  const projectPath = optionalPath ? optionalPath + projectTitle : projectTitle;
-  const repoUrl = repos[projectType];
+cloneAndInstallProject = async (projectType, projectTitle, dualPlatFolder) => {
+  projectType === DUAL_PLATFORM &&
+    console.log("\nCreating root project..\n".yellow);
+
+  const projectPath = dualPlatFolder
+    ? dualPlatFolder + projectTitle
+    : projectTitle;
+
+  cloneRepo(repos[projectType], projectTitle, dualPlatFolder);
+  projectType !== DUAL_PLATFORM && createFirebaseAvailAppFile(projectPath);
+  await npmInstall(projectPath);
+
+  if (projectType === DUAL_PLATFORM) {
+    return createDualPlatSubProjects(projectTitle);
+  }
+
+  // solo plat completed
+  !dualPlatFolder && printSuccess(projectPath);
+
+  // tell dual plat process to move to next step
+  return new Promise(resolve => resolve());
+};
+
+cloneRepo = (repoUrl, projectTitle, dualPlatFolder) => {
   console.log("Cloning repository");
   shell.exec(
     `${
-      optionalPath ? `cd ${optionalPath} &&` : ""
+      dualPlatFolder ? `cd ${dualPlatFolder} &&` : ""
     } git init ${projectTitle} && cd ${projectTitle} && git pull ${repoUrl}`
   );
+};
 
-  projectType !== DUAL_PLATFORM &&
-    getFirebaseProjects((err, projects) => {
-      if (!err) {
-        fs.writeFile(
-          `${projectPath}/src/.combust/availApps.json`,
-          JSON.stringify(projects),
-          err => {
-            if (err) throw err;
-          }
-        );
+npmInstall = path => {
+  return new Promise((resolve, reject) => {
+    const spinner = ora("Installing npm dependencies").start();
+    const { stdout, stderr, code } = shell.exec(
+      `cd ${path} && npm install --silent`,
+      { async: true, silent: true },
+      () => {
+        spinner.clear();
+        spinner.stop();
+        resolve();
       }
-    }, true);
+    );
+  });
+};
 
-  const spinner = ora("Installing npm dependencies").start();
-  const { stdout, stderr, code } = shell.exec(
-    `cd ${projectPath} && npm install --silent`,
-    { async: true, silent: true },
-    () => {
-      spinner.clear();
-      spinner.stop();
-      if (projectType === DUAL_PLATFORM) {
-        return createDualPlatProject(projectTitle);
-      }
-      if (!optionalPath) printSuccess(projectPath);
-      callback && callback();
+createFirebaseAvailAppFile = async projectPath => {
+  let projects = await getFirebaseProjects(true);
+  fs.writeFile(
+    `${projectPath}/src/.combust/availApps.json`,
+    JSON.stringify(projects),
+    err => {
+      if (err) throw err;
     }
   );
 };
 
-createDualPlatProject = projectTitle => {
+createDualPlatSubProjects = async projectTitle => {
   console.log("\nCreating web project..\n".yellow);
-  cloneAndInstallProject(WEB, "web", projectTitle + "/", () => {
-    console.log("\nCreating mobile project..\n".yellow);
-    cloneAndInstallProject(MOBILE, "mobile", projectTitle + "/", () => {
-      printSuccess(projectTitle);
-    });
-  });
+  await cloneAndInstallProject(WEB, "web", projectTitle + "/");
+  console.log("\nCreating mobile project..\n".yellow);
+  await cloneAndInstallProject(MOBILE, "mobile", projectTitle + "/");
+  printSuccess(projectTitle);
 };
 
-promptForProjectType = callback => {
-  getRadioInput(
-    {
-      name: "projectTypes",
-      message: "Select a project type:",
-      choices: [WEB, MOBILE, DUAL_PLATFORM]
-    },
-    callback
-  );
-};
+promptForProjectType = () =>
+  getRadioInput({
+    name: "projectTypes",
+    message: "Select a project type:",
+    choices: [WEB, MOBILE, DUAL_PLATFORM]
+  });
 
 const WEB = " Web";
 const MOBILE = " Mobile";
@@ -107,3 +108,8 @@ printSuccess = projectPath => {
       `\nnpm start`.cyan
   );
 };
+
+printProjExistsErr = projectTitle =>
+  console.log(
+    "Err: ".red + "Directory " + projectTitle.cyan + " already exists."
+  );
