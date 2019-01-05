@@ -65,5 +65,6 @@ combust generate blogs title:string body:text blogImage:image
 To create a sports statistics tracking app, if we wanted players with stats, we could do something like:
 
 ```sh
-combust generate players firstName:string lastName:string profileImg:image bio:text age:number points:number gamesPlayed:number isActive:boolean isLeftHanded:boolean
+combust generate players firstName:string lastName:string profileImg:image bio:text
+age:number points:number gamesPlayed:number isActive:boolean isLeftHanded:boolean
 ```
