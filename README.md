@@ -4,11 +4,11 @@ Command line tool for creating and prototyping full stack, serverless web and mo
 
 ## Example
 
-`npm i -g combust`
+`$ npm i -g combust`
 
-`combust create myNewApp`
+`$ combust create myNewApp`
 
-`cd myNewApp && npm start`
+`$ cd myNewApp && npm start`
 
 ## Commands
 
@@ -16,7 +16,7 @@ Command line tool for creating and prototyping full stack, serverless web and mo
 
 `$ combust create`
 
-<b>args</b>: app name (optional)
+<i>args:</i> app name (optional)
 
 Creates a new project, you'll be prompted to chose a type (web, mobile, dual plat)
 
@@ -24,7 +24,7 @@ Creates a new project, you'll be prompted to chose a type (web, mobile, dual pla
 
 `$ combust configure`
 
-<b>args</b>: firebase projectId (optional)
+<i>args:</i> firebase projectId (optional)
 
 Sets up your project with a firebase database, if no project is provided, you'll be prompted to choose from a list
 
@@ -32,7 +32,7 @@ Sets up your project with a firebase database, if no project is provided, you'll
 
 `$ combust install moduleTitle`
 
-<b>args</b>: moduleTitle (required)
+<i>args:</i> moduleTitle (required)
 
 Installs a combust module (this will alter your project's source code. [Available modules can be found here.](https://joeroddy.github.io/combust/modules.html)
 
@@ -40,7 +40,7 @@ Installs a combust module (this will alter your project's source code. [Availabl
 
 `$ combust generate newModule fieldName:dataType fieldName2:dataType`
 
-<b>args</b>: moduleTitle (required), list of fieldName:dataType pairs (required)
+<i>args:</i> moduleTitle (required), list of fieldName:dataType pairs (required)
 
 <b>valid data types</b>: text, string, number, boolean, image
 
