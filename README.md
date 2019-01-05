@@ -10,6 +10,12 @@ combust create myNewApp
 cd myNewApp && npm start
 ```
 
+## Setting up
+
+Your app will take you through a setup process once launched, or you can follow along with this video:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/NocD6ElmdF0?start=89" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 ## Commands
 
 ### create
