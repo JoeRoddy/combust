@@ -11,7 +11,7 @@ import UpdateItem from "./UpdateItem";
 const fields = {};
 
 @observer
-export default class Item extends React.Component {
+class Item extends React.Component {
   state = {
     isUnderEdit: false
   };
@@ -45,6 +45,8 @@ export default class Item extends React.Component {
     );
   }
 }
+
+export default Item;
 
 const styles = StyleSheet.create({
   bold: {

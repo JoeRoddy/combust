@@ -9,7 +9,7 @@ import UpdateItem from "./UpdateItem";
 const fields = {};
 
 @observer
-export default class Item extends Component {
+class Item extends Component {
   state = {
     isUnderEdit: false
   };
@@ -42,6 +42,8 @@ export default class Item extends Component {
     );
   }
 }
+
+export default Item;
 
 const RenderItem = ({ item }) => {
   return (

@@ -7,7 +7,7 @@ import userStore from "../../stores/UserStore";
 import "./styles/Items.scss";
 
 @observer
-export default class Items extends Component {
+class Items extends Component {
   render() {
     const userId = this.props.match.params.userId;
     const user = userStore.getUserById(userId);
@@ -46,3 +46,5 @@ export default class Items extends Component {
     );
   }
 }
+
+export default Items;
