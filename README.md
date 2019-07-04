@@ -21,7 +21,6 @@ sudo npm i --unsafe-perm -g combust --allow-root
 ## Setting up
 
 ```sh
-sudo npm i --unsafe-perm -g combust --allow-root
 combust create myNewApp
 cd myNewApp && npm start
 ```
