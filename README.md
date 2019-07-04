@@ -9,6 +9,8 @@ Command line tool for creating and prototyping full stack, serverless web and mo
 yarn add global combust
 ```
 
+OR
+
 ### npm
 For npm, due to [an issue](https://github.com/nodejs/node-gyp/issues/454) with node-gyp, we'll need to execute a funky install command.
 
