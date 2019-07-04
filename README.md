@@ -5,7 +5,7 @@ Command line tool for creating and prototyping full stack, serverless web and mo
 ## Example
 
 ```sh
-npm i -g combust
+sudo npm i --unsafe-perm -g combust --allow-root
 combust create myNewApp
 cd myNewApp && npm start
 ```
