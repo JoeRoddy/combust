@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "colors": "^1.1.2",
-    "firebase": "^4.8.0",
+    "firebase": "^5.0.2",
     "ncp": "^2.0.0",
     "ora": "^1.3.0",
     "prompt": "^1.0.0",
