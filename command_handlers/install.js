@@ -7,6 +7,7 @@ const tmp = require("tmp");
 
 const { getUserAdmins, updateData } = require("../helpers/firebase_helper");
 const {
+  cpFolderRecursively,
   isCurrentDirCombustApp,
   mkdirSync,
   nonCombustAppErr,
@@ -27,8 +28,8 @@ function install(moduleName, isDependency, callback) {
     return console.error(
       "Err: Must specify a module: combust install moduleName\nView available modules here: https://joeroddy.github.io/combust/modules.html"
     );
+  [moduleName, devPath] = moduleName.split("_dev@");
   moduleName.toLowerCase();
-
   const projectType = getProjectType();
   isDualProject = projectType === "dual";
 
@@ -55,7 +56,83 @@ function install(moduleName, isDependency, callback) {
   const tempFolder = `${tmpObj.name}/${moduleName}`;
   mkdirSync(tempFolder);
 
-  //download npm contents and unzip into temp directory
+  getModuleFiles(moduleName, tempFolder, devPath).then(() => {
+    let jsonData = fs.readFileSync(
+      `${tempFolder}/package/combust.json`,
+      "utf8"
+    );
+
+    let instructions = JSON.parse(jsonData);
+    addNpmDependenciesToQue(instructions, projectType);
+    downloadDependencies(instructions.dependencies)
+      .then(a => {
+        const storeFile = fs.readdirSync(`${tempFolder}/package/stores`)[0];
+
+        if (isDualProject) {
+          ["web", "mobile"].forEach(platform => {
+            mkdirSync(`${platform}/src/stores`);
+            mkdirSync(`${platform}/src/db`);
+            mkdirSync(`${platform}/${componentsPath}`);
+          });
+        } else {
+          mkdirSync("src/stores");
+          mkdirSync("src/db");
+          mkdirSync(componentsPath);
+        }
+
+        //extract files we need and move to src
+        shell.exec(`mv -v ${tempFolder}/package/stores/* ${storePath}`, {
+          silent: true
+        });
+        shell.exec(`mv -v ${tempFolder}/package/db/* ${dbPath}`, {
+          silent: true
+        });
+        if (instructions.rules) rules[moduleName] = instructions.rules;
+
+        insertComponentsAndExecuteInstructions({
+          instructions,
+          projectType,
+          moduleName,
+          tempFolder,
+          componentsPath
+        });
+
+        updateCombustConfig(storeFile);
+        shell.exec(`rm -rf ${tempFolder}`);
+        if (!isDependency) {
+          if (Object.keys(rules).length > 0) {
+            updateDatabaseRules(rules);
+          }
+          installNpmDependencies(() => {
+            console.log(
+              `\n${moduleName}`.yellow + ` succesfully installed!\n`.yellow
+            );
+          });
+        } else {
+          callback &&
+            callback(
+              null,
+              moduleName.cyan + " module installed as a dependency"
+            );
+        }
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  });
+  // return;
+}
+
+//download npm contents and unzip into temp directory
+function getModuleFiles(moduleName, tempFolder, devPath) {
+  if (devPath) {
+    mkdirSync(tempFolder + "/package");
+    return new Promise((resolve, reject) => {
+      cpFolderRecursively(devPath, tempFolder + "/package", err => {
+        err ? console.log(err[0].message) : resolve();
+      });
+    });
+  }
   const { stdout, stderr } = shell.exec(`npm pack combust-${moduleName}`, {
     silent: true
   });
@@ -71,80 +148,15 @@ function install(moduleName, isDependency, callback) {
   let tgzFile = stdout.trim();
   shell.exec(`mv ${tgzFile} ${tempFolder}`);
 
-  tar
+  return tar
     .extract({
       cwd: tempFolder,
       file: tempFolder + "/" + tgzFile
     })
     .then(() => {
-      fs.unlink(tempFolder + "/" + tgzFile, err => {
-        err && console.error(err);
-      });
-
-      let jsonData = fs.readFileSync(
-        `${tempFolder}/package/combust.json`,
-        "utf8"
-      );
-
-      let instructions = JSON.parse(jsonData);
-      addNpmDependenciesToQue(instructions, projectType);
-      downloadDependencies(instructions.dependencies)
-        .then(a => {
-          const storeFile = fs.readdirSync(`${tempFolder}/package/stores`)[0];
-
-          if (isDualProject) {
-            ["web", "mobile"].forEach(platform => {
-              mkdirSync(`${platform}/src/stores`);
-              mkdirSync(`${platform}/src/db`);
-              mkdirSync(`${platform}/${componentsPath}`);
-            });
-          } else {
-            mkdirSync("src/stores");
-            mkdirSync("src/db");
-            mkdirSync(componentsPath);
-          }
-
-          //extract files we need and move to src
-          shell.exec(`mv -v ${tempFolder}/package/stores/* ${storePath}`, {
-            silent: true
-          });
-          shell.exec(`mv -v ${tempFolder}/package/db/* ${dbPath}`, {
-            silent: true
-          });
-          if (instructions.rules) rules[moduleName] = instructions.rules;
-
-          insertComponentsAndExecuteInstructions({
-            instructions,
-            projectType,
-            moduleName,
-            tempFolder,
-            componentsPath
-          });
-
-          updateCombustConfig(storeFile);
-          shell.exec(`rm -rf ${tempFolder}`);
-          if (!isDependency) {
-            if (Object.keys(rules).length > 0) {
-              updateDatabaseRules(rules);
-            }
-            installNpmDependencies(() => {
-              console.log(
-                `\n${moduleName}`.yellow + ` succesfully installed!\n`.yellow
-              );
-            });
-          } else {
-            callback &&
-              callback(
-                null,
-                moduleName.cyan + " module installed as a dependency"
-              );
-          }
-        })
-        .catch(err => {
-          console.error(err);
-        });
+      // delete the zip file
+      fs.unlink(tempFolder + "/" + tgzFile, err => err && console.error(err));
     });
-  // return;
 }
 
 function insertComponentsAndExecuteInstructions(context) {
@@ -183,7 +195,7 @@ function insertComponentsAndExecuteInstructions(context) {
 }
 
 /**
- * synchronously downloads all dependencies, promise resolve when done or rejects onErr
+ * synchronously downloads all dependencies, promise resolves when done or rejects onErr
  * @param {array} dependencies
  */
 function downloadDependencies(dependencies) {
@@ -393,7 +405,7 @@ function installNpmDependencies(callback = () => {}) {
   const platformsToInstall =
     projectType === "dual" ? ["web", "mobile"] : [projectType];
 
-  //move to promise or async/await eventually,
+  //move to promises eventually,
   //basically doing the same thing w/callbacks here
   let currentPlatformIndex = 0;
   const recursiveInstall = platform => {
