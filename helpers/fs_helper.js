@@ -8,9 +8,9 @@ const getProjectType = () => {
   return fs.existsSync("./shared/.combust")
     ? "dual"
     : //ghetto, replace with some config prop later
-      fs.existsSync("./src/components/Routes.js")
-      ? "mobile"
-      : "web";
+    fs.existsSync("./src/components/Routes.js")
+    ? "mobile"
+    : "web";
 };
 
 const isCurrentDirCombustApp = () => {
@@ -27,7 +27,7 @@ const getConfiguredFirebaseProjectId = () => {
   }/.combust/firebase.config.json`;
   const content = fs.readFileSync(firebaseConfigPath, "utf8");
   const firebaseConfig = JSON.parse(content);
-  return firebaseConfig.projectId;
+  return firebaseConfig ? firebaseConfig.projectId : null;
 };
 
 /**
