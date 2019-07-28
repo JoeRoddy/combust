@@ -12,7 +12,6 @@ combust create myNewApp
 cd myNewApp && npm start
 ```
 
-
 Your app will take you through a setup process once launched, or you can follow along with [this video.](https://youtu.be/NocD6ElmdF0?t=89)
 
 ## Commands
@@ -57,7 +56,7 @@ combust generate newModule fieldName:dataType fieldName2:dataType
 
 <b>valid data types: text, string, number, boolean, image</b>
 
-Generates front-end, data store, and view code for a new module.
+Generates front-end, data store, and db code for a new module.
 
 #### Extended Examples
 
