@@ -2,12 +2,17 @@
 
 Command line tool for creating and prototyping full stack, serverless web and mobile apps.
 
-## Setting up
+## Installation
 
 Due to [an issue](https://github.com/nodejs/node-gyp/issues/454) with node-gyp, we'll need to execute a funky install command.
 
 ```sh
 sudo npm i --unsafe-perm -g combust --allow-root
+```
+
+## Setting up
+
+```sh
 combust create myNewApp
 cd myNewApp && npm start
 ```
