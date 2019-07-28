@@ -5,6 +5,7 @@ const colors = require("colors");
 
 const { getFirebaseProjects } = require("../helpers/firebase_helper.js");
 const { getRadioInput } = require("../helpers/input_helper.js");
+const { cloneRepo } = require("../helpers/fs_helper.js");
 
 module.exports = async (projectTitle, projectType) => {
   projectTitle = projectTitle || "myCombustApp";
@@ -35,15 +36,6 @@ cloneAndInstallProject = async (projectType, projectTitle, dualPlatFolder) => {
 
   // tell dual plat process to move to next step
   return new Promise(resolve => resolve());
-};
-
-cloneRepo = (repoUrl, projectTitle, dualPlatFolder) => {
-  console.log("Cloning repository");
-  shell.exec(
-    `${
-      dualPlatFolder ? `cd ${dualPlatFolder} &&` : ""
-    } git init ${projectTitle} && cd ${projectTitle} && git pull ${repoUrl}`
-  );
 };
 
 npmInstall = path => {

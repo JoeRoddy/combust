@@ -8,6 +8,8 @@ const tmp = require("tmp");
 const { getUserAdmins, updateData } = require("../helpers/firebase_helper");
 const {
   cpFolderRecursively,
+  rmFolderRecursively,
+  cloneRepo,
   isCurrentDirCombustApp,
   mkdirSync,
   nonCombustAppErr,
@@ -36,7 +38,6 @@ function install(moduleName, isDependency, callback) {
   const firstCap = moduleName.charAt(0).toUpperCase() + moduleName.substring(1);
   const storePath = isDualProject ? `shared/stores/` : `src/stores/`;
   const dbPath = isDualProject ? `shared/db` : `src/db/`;
-  const componentsPath = `src/components/${moduleName}`;
 
   if (
     fs.existsSync(storePath + firstCap + "Store.js") ||
@@ -66,27 +67,46 @@ function install(moduleName, isDependency, callback) {
     addNpmDependenciesToQue(instructions, projectType);
     downloadDependencies(instructions.dependencies)
       .then(a => {
-        const storeFile = fs.readdirSync(`${tempFolder}/package/stores`)[0];
+        const cloudFunctionsExist = instructions.cloudFunctions ? true : false;
+        if (cloudFunctionsExist && !fs.existsSync("./functions/index.js")) {
+          applyBaseCloudFunctions();
+        }
+        const componentsExist = fs.existsSync(
+          `${tempFolder}/package/components/`
+        );
+        const storesExist = fs.existsSync(`${tempFolder}/package/stores/`);
+        const dbExists = fs.existsSync(`${tempFolder}/package/db/`);
+        const componentsPath = componentsExist
+          ? `src/components/${moduleName}`
+          : null;
 
         if (isDualProject) {
           ["web", "mobile"].forEach(platform => {
-            mkdirSync(`${platform}/src/stores`);
-            mkdirSync(`${platform}/src/db`);
-            mkdirSync(`${platform}/${componentsPath}`);
+            storesExist && mkdirSync(`${platform}/src/stores`);
+            dbExists && mkdirSync(`${platform}/src/db`);
+            componentsPath && mkdirSync(`${platform}/${componentsPath}`);
+            cloudFunctionsExist && mkdirSync(`${platform}/functions/api`);
           });
         } else {
-          mkdirSync("src/stores");
-          mkdirSync("src/db");
-          mkdirSync(componentsPath);
+          storesExist && mkdirSync("src/stores");
+          dbExists && mkdirSync("src/db");
+          componentsPath && mkdirSync(componentsPath);
+          cloudFunctionsExist && mkdirSync("functions/api");
         }
-
         //extract files we need and move to src
-        shell.exec(`mv -v ${tempFolder}/package/stores/* ${storePath}`, {
-          silent: true
-        });
-        shell.exec(`mv -v ${tempFolder}/package/db/* ${dbPath}`, {
-          silent: true
-        });
+        storesExist &&
+          shell.exec(`mv -v ${tempFolder}/package/stores/* ${storePath}`, {
+            silent: true
+          });
+        dbExists &&
+          shell.exec(`mv -v ${tempFolder}/package/db/* ${dbPath}`, {
+            silent: true
+          });
+        cloudFunctionsExist &&
+          shell.exec(`mv -v ${tempFolder}/package/api/* functions/api/`, {
+            silent: true
+          });
+
         if (instructions.rules) rules[moduleName] = instructions.rules;
 
         insertComponentsAndExecuteInstructions({
@@ -97,8 +117,15 @@ function install(moduleName, isDependency, callback) {
           componentsPath
         });
 
-        updateCombustConfig(storeFile);
         shell.exec(`rm -rf ${tempFolder}`);
+
+        if (storesExist) {
+          const storeFile = fs.readdirSync(storePath)[0];
+          updateCombustConfig(storeFile);
+        }
+        if (cloudFunctionsExist) {
+          deployCloudFunctions();
+        }
         if (!isDependency) {
           if (Object.keys(rules).length > 0) {
             updateDatabaseRules(rules);
@@ -120,12 +147,12 @@ function install(moduleName, isDependency, callback) {
         console.log(err);
       });
   });
-  // return;
 }
 
 //download npm contents and unzip into temp directory
 function getModuleFiles(moduleName, tempFolder, devPath) {
   if (devPath) {
+    console.log("INSTALLING WITH DEV_MODE");
     mkdirSync(tempFolder + "/package");
     return new Promise((resolve, reject) => {
       cpFolderRecursively(devPath, tempFolder + "/package", err => {
@@ -178,14 +205,15 @@ function insertComponentsAndExecuteInstructions(context) {
       console.log(
         "Mobile components not supplied for " + moduleName.cyan + " module"
       );
-      createPlaceholderMobileComponent(moduleName);
+      componentsPath && createPlaceholderMobileComponent(moduleName);
       executeInstallInstructions(getDefaultInstallInstrucForMobile(moduleName));
     } else {
-      shell.exec(
-        `mv ${tempFolder}/package/${
-          platform === "mobile" ? "mobile_components" : "components"
-        }/* ${isDualProject ? platform + "/" : ""}${componentsPath}`
-      );
+      componentsPath &&
+        shell.exec(
+          `mv ${tempFolder}/package/${
+            platform === "mobile" ? "mobile_components" : "components"
+          }/* ${isDualProject ? platform + "/" : ""}${componentsPath}`
+        );
       executeInstallInstructions(
         installInstructions,
         isDualProject ? platform : null
@@ -365,8 +393,11 @@ function executeInstallInstructions(installInstructions, dualProjectPlatform) {
   const pathPrefix = dualProjectPlatform ? `${dualProjectPlatform}/` : "";
   installInstructions &&
     Object.keys(installInstructions).forEach(path => {
+      const pathSuffix = path.startsWith("**")
+        ? path.substring(2)
+        : `src/${path}`;
       // src/${path} ||  mobile/src/${path} ||  web/src/${path}
-      const filePath = `${pathPrefix}src/${path}`;
+      const filePath = `${pathPrefix}${pathSuffix}`;
       let file = fs.readFileSync(filePath);
       const fileInstructions = installInstructions[path];
       Object.keys(fileInstructions).forEach(operation => {
@@ -470,7 +501,8 @@ const operationsMap = {
   renderEnd: insertAtRenderEnd,
   after: insertAfter,
   before: insertBefore,
-  replace: replaceCode
+  replace: replaceCode,
+  fileEnd: insertAtEndOfFile
 };
 
 function insertImports(file, code) {
@@ -530,6 +562,13 @@ function getCodeStrFromArr(codeArray) {
       codeStr += line + "\n";
     });
   return codeStr;
+}
+
+function insertAtEndOfFile(file, code) {
+  code.forEach(line => {
+    file = file + "\n" + line;
+  });
+  return file;
 }
 
 module.exports = {
@@ -603,8 +642,6 @@ function saveInstallData(installData, callback) {
   replacePlaceholders(installData);
   finishedWithTree = true;
   checkIfFinished();
-
-  // console.log("installdata after:", installData);
 }
 
 var replaceMentKeysByPlaceholder = {};
@@ -629,4 +666,27 @@ function getReplacementKeysForPlaceholder(placeholder) {
         });
     }
   });
+}
+
+function applyBaseCloudFunctions() {
+  console.log("Setting up cloud functions..\n".green);
+  cloneRepo(
+    "https://github.com/JoeRoddy/combust-cloud-functions.git",
+    "functions"
+  );
+  shell.exec("cd functions && npm i", { silent: true });
+  rmFolderRecursively("functions/.git");
+  let file = fs.readFileSync("functions/index.js", "utf8");
+  file = replaceCode(file, {
+    pattern: 'databaseURL: ""',
+    code: [
+      `databaseURL: "https://${getConfiguredFirebaseProjectId()}.firebaseio.com"`
+    ]
+  });
+  fs.writeFileSync("functions/index.js", file);
+}
+
+function deployCloudFunctions() {
+  console.log("Deploying new cloud functions.. this may take a minute..".green);
+  shell.exec("firebase deploy --only functions");
 }

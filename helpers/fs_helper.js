@@ -1,3 +1,4 @@
+const shell = require("shelljs");
 const fs = require("fs");
 const ncp = require("ncp").ncp;
 
@@ -67,11 +68,46 @@ function cpFolderRecursively(source, destination, callback) {
   }
 }
 
+function rmFolderRecursively(path) {
+  var files = [];
+  if (fs.existsSync(path)) {
+    files = fs.readdirSync(path);
+    files.forEach(function(file, index) {
+      var curPath = path + "/" + file;
+      if (fs.lstatSync(curPath).isDirectory()) {
+        // recurse
+        rmFolderRecursively(curPath);
+      } else {
+        // delete file
+        fs.unlinkSync(curPath);
+      }
+    });
+    fs.rmdirSync(path);
+  }
+}
+
+/**
+ * clones a git repository
+ * @param {string} repoUrl
+ * @param {string} projectTitle
+ * @param {string} dualPlatFolder
+ */
+function cloneRepo(repoUrl, projectTitle, dualPlatFolder) {
+  console.log("Cloning repository");
+  shell.exec(
+    `${
+      dualPlatFolder ? `cd ${dualPlatFolder} &&` : ""
+    } git init ${projectTitle} && cd ${projectTitle} && git pull ${repoUrl}`
+  );
+}
+
 module.exports = {
   cpFolderRecursively,
   getConfiguredFirebaseProjectId,
   getProjectType,
   isCurrentDirCombustApp,
   nonCombustAppErr,
-  mkdirSync
+  mkdirSync,
+  rmFolderRecursively,
+  cloneRepo
 };
