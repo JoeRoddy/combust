@@ -25,7 +25,7 @@ function install(moduleName, isDependency, callback) {
     return console.error(nonCombustAppErr);
   } else if (!moduleName)
     return console.error(
-      "Err: Must specify a module: combust install moduleName\nView available modules here: http://www.example.com"
+      "Err: Must specify a module: combust install moduleName\nView available modules here: https://joeroddy.github.io/combust/modules.html"
     );
   moduleName.toLowerCase();
 
@@ -333,10 +333,10 @@ function updateDatabaseRules(rules) {
     console.log(
       stderr.includes("Command requires authentication")
         ? "\nYou must be logged in to the Firebase CLI to publish rules.".red +
-          "\nPlease run: " +
-          "firebase login".cyan +
-          "\nFollowed by: " +
-          "firebase deploy --only database".cyan
+            "\nPlease run: " +
+            "firebase login".cyan +
+            "\nFollowed by: " +
+            "firebase deploy --only database".cyan
         : stderr
     );
   } else {
