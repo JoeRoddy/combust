@@ -19,10 +19,11 @@ require("yargs") // eslint-disable-line
     }
   )
   .command(
-    "install [module]",
+    ["install [module]", "i"],
     "install a combust module",
     yargs => {
       yargs.positional("module", {
+        alias: "ins",
         describe: "module to add"
       });
     },
