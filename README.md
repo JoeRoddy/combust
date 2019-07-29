@@ -1,6 +1,6 @@
 # Combust
 
-Combust is a command line tool for creating and prototyping full stack, serverless web and mobile apps.
+Combust is a command line tool for rapidly creating and prototyping serverless web and mobile apps.
 
 ## Installation
 
@@ -60,11 +60,11 @@ combust generate newModule fieldName:dataType fieldName2:dataType
 
 <i>args:</i> moduleTitle (required), list of fieldName:dataType pairs (required)
 
-<b>valid data types: text, string, number, boolean, image</b>
+<b>valid data types: text, string, number, image, and boolean (true/false)</b>
 
-Generates front-end, data store, and database code for a new module.
+Generates the front-end, data store, and database code for a new feature.
 
-#### Extended Examples
+#### Combust Generate Examples
 
 To create a blogging platform, where blogs can have a title, a body, and a blog image, we would do something like:
 
@@ -75,6 +75,5 @@ combust generate blogs title:string body:text blogImage:image
 To create a sports statistics tracking app, if we wanted players with stats, we could do something like:
 
 ```sh
-combust generate players firstName:string lastName:string profileImg:image bio:text
-age:number points:number gamesPlayed:number isActive:boolean isLeftHanded:boolean
+combust generate players firstName:string lastName:string profileImg:image bio:text age:number points:number gamesPlayed:number isActive:boolean
 ```
