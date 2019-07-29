@@ -31,7 +31,7 @@ function install(moduleName, isDependency, callback) {
       "Err: Must specify a module: combust install moduleName\nView available modules here: https://joeroddy.github.io/combust/modules.html"
     );
   [moduleName, devPath] = moduleName.split("_dev@");
-  moduleName.toLowerCase();
+  moduleName = moduleName.toLowerCase();
   const projectType = getProjectType();
   isDualProject = projectType === "dual";
 
@@ -44,7 +44,8 @@ function install(moduleName, isDependency, callback) {
     fs.existsSync(storePath + firstCap + "s" + "Store.js") ||
     fs.existsSync(
       storePath + firstCap.substring(0, firstCap.length - 1) + "Store.js"
-    )
+    ) ||
+    fs.existsSync(`functions/api/${determineApiFileName(moduleName)}Api.js`)
   ) {
     //TODO: check if module is installed (in a less shitty way than this^)
     if (!isDependency) {
@@ -689,4 +690,15 @@ function applyBaseCloudFunctions() {
 function deployCloudFunctions() {
   console.log("Deploying new cloud functions.. this may take a minute..".green);
   shell.exec("firebase deploy --only functions");
+}
+
+function determineApiFileName(moduleName) {
+  // user-search => userSearch
+  return moduleName
+    .split("-")
+    .reverse()
+    .reduce(
+      (s, name, i) =>
+        (name += i === 0 ? s : s.charAt(0).toUpperCase() + s.slice(1))
+    );
 }
