@@ -1,6 +1,6 @@
 # Combust
 
-Command line tool for creating and prototyping full stack, serverless web and mobile apps.
+Combust is a command line tool for creating and prototyping full stack, serverless web and mobile apps.
 
 ## Installation
 
@@ -29,7 +29,7 @@ combust create
 
 <i>args:</i> app name (optional)
 
-Creates a new project, you'll be prompted to chose a type (web, mobile, dual plat)
+Creates a new project, you'll be prompted to choose a type (web, mobile, or dual platform)
 
 ### configure
 
@@ -39,7 +39,7 @@ combust configure
 
 <i>args:</i> firebase projectId (optional)
 
-Sets up your project with a firebase database, if no project is provided, you'll be prompted to choose from a list
+Sets up your project with a firebase database, if no projectId is provided, you'll be prompted to choose one from a list
 
 ### install
 
@@ -49,7 +49,8 @@ combust install moduleTitle
 
 <i>args:</i> moduleTitle (required)
 
-Installs a combust module (this will alter your project's source code. [Available modules can be found here.](https://joeroddy.github.io/combust/modules.html)
+Installs a combust module (this will alter your project's source code).
+[Available modules can be found here.](https://joeroddy.github.io/combust/modules.html)
 
 ### generate
 
@@ -61,11 +62,11 @@ combust generate newModule fieldName:dataType fieldName2:dataType
 
 <b>valid data types: text, string, number, boolean, image</b>
 
-Generates front-end, data store, and db code for a new module.
+Generates front-end, data store, and database code for a new module.
 
 #### Extended Examples
 
-To create a blogging platform where blogs can have a title, a body, and a blog image, we would do something like:
+To create a blogging platform, where blogs can have a title, a body, and a blog image, we would do something like:
 
 ```sh
 combust generate blogs title:string body:text blogImage:image
