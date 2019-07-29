@@ -23,7 +23,7 @@ let mobileNpmDependencies = {};
 let webNpmDependencies = {};
 let isDualProject = false;
 
-function install(moduleName, isDependency, callback) {
+async function install(moduleName, isDependency, callback) {
   if (!isCurrentDirCombustApp()) {
     return console.error(nonCombustAppErr);
   } else if (!moduleName)
@@ -58,7 +58,8 @@ function install(moduleName, isDependency, callback) {
   const tempFolder = `${tmpObj.name}/${moduleName}`;
   mkdirSync(tempFolder);
 
-  getModuleFiles(moduleName, tempFolder, devPath).then(() => {
+  try {
+    await getModuleFiles(moduleName, tempFolder, devPath);
     let jsonData = fs.readFileSync(
       `${tempFolder}/package/combust.json`,
       "utf8"
@@ -66,88 +67,80 @@ function install(moduleName, isDependency, callback) {
 
     let instructions = JSON.parse(jsonData);
     addNpmDependenciesToQue(instructions, projectType);
-    downloadDependencies(instructions.dependencies)
-      .then(a => {
-        const cloudFunctionsExist = instructions.cloudFunctions ? true : false;
-        if (cloudFunctionsExist && !fs.existsSync("./functions/index.js")) {
-          applyBaseCloudFunctions();
-        }
-        const componentsExist = fs.existsSync(
-          `${tempFolder}/package/components/`
-        );
-        const storesExist = fs.existsSync(`${tempFolder}/package/stores/`);
-        const dbExists = fs.existsSync(`${tempFolder}/package/db/`);
-        const componentsPath = componentsExist
-          ? `src/components/${moduleName}`
-          : null;
+    await downloadDependencies(instructions.dependencies);
+    const cloudFunctionsExist = instructions.cloudFunctions ? true : false;
+    if (cloudFunctionsExist && !fs.existsSync("./functions/index.js")) {
+      applyBaseCloudFunctions();
+    }
+    const componentsExist = fs.existsSync(`${tempFolder}/package/components/`);
+    const storesExist = fs.existsSync(`${tempFolder}/package/stores/`);
+    const dbExists = fs.existsSync(`${tempFolder}/package/db/`);
+    const componentsPath = componentsExist
+      ? `src/components/${moduleName}`
+      : null;
 
-        if (isDualProject) {
-          ["web", "mobile"].forEach(platform => {
-            storesExist && mkdirSync(`${platform}/src/stores`);
-            dbExists && mkdirSync(`${platform}/src/db`);
-            componentsPath && mkdirSync(`${platform}/${componentsPath}`);
-            cloudFunctionsExist && mkdirSync(`${platform}/functions/api`);
-          });
-        } else {
-          storesExist && mkdirSync("src/stores");
-          dbExists && mkdirSync("src/db");
-          componentsPath && mkdirSync(componentsPath);
-          cloudFunctionsExist && mkdirSync("functions/api");
-        }
-        //extract files we need and move to src
-        storesExist &&
-          shell.exec(`mv -v ${tempFolder}/package/stores/* ${storePath}`, {
-            silent: true
-          });
-        dbExists &&
-          shell.exec(`mv -v ${tempFolder}/package/db/* ${dbPath}`, {
-            silent: true
-          });
-        cloudFunctionsExist &&
-          shell.exec(`mv -v ${tempFolder}/package/api/* functions/api/`, {
-            silent: true
-          });
-
-        if (instructions.rules) rules[moduleName] = instructions.rules;
-
-        insertComponentsAndExecuteInstructions({
-          instructions,
-          projectType,
-          moduleName,
-          tempFolder,
-          componentsPath
-        });
-
-        shell.exec(`rm -rf ${tempFolder}`);
-
-        if (storesExist) {
-          const storeFile = fs.readdirSync(storePath)[0];
-          updateCombustConfig(storeFile);
-        }
-        if (cloudFunctionsExist) {
-          deployCloudFunctions();
-        }
-        if (!isDependency) {
-          if (Object.keys(rules).length > 0) {
-            updateDatabaseRules(rules);
-          }
-          installNpmDependencies(() => {
-            console.log(
-              `\n${moduleName}`.yellow + ` succesfully installed!\n`.yellow
-            );
-          });
-        } else {
-          callback &&
-            callback(
-              null,
-              moduleName.cyan + " module installed as a dependency"
-            );
-        }
-      })
-      .catch(err => {
-        console.log(err);
+    if (isDualProject) {
+      ["web", "mobile"].forEach(platform => {
+        storesExist && mkdirSync(`${platform}/src/stores`);
+        dbExists && mkdirSync(`${platform}/src/db`);
+        componentsPath && mkdirSync(`${platform}/${componentsPath}`);
+        cloudFunctionsExist && mkdirSync(`${platform}/functions/api`);
       });
-  });
+    } else {
+      storesExist && mkdirSync("src/stores");
+      dbExists && mkdirSync("src/db");
+      componentsPath && mkdirSync(componentsPath);
+      cloudFunctionsExist && mkdirSync("functions/api");
+    }
+    //extract files we need and move to src
+    storesExist &&
+      shell.exec(`mv -v ${tempFolder}/package/stores/* ${storePath}`, {
+        silent: true
+      });
+    dbExists &&
+      shell.exec(`mv -v ${tempFolder}/package/db/* ${dbPath}`, {
+        silent: true
+      });
+    cloudFunctionsExist &&
+      shell.exec(`mv -v ${tempFolder}/package/api/* functions/api/`, {
+        silent: true
+      });
+
+    if (instructions.rules) rules[moduleName] = instructions.rules;
+
+    insertComponentsAndExecuteInstructions({
+      instructions,
+      projectType,
+      moduleName,
+      tempFolder,
+      componentsPath
+    });
+
+    shell.exec(`rm -rf ${tempFolder}`);
+
+    if (storesExist) {
+      const storeFile = fs.readdirSync(storePath)[0];
+      updateCombustConfig(storeFile);
+    }
+    if (cloudFunctionsExist) {
+      deployCloudFunctions();
+    }
+    if (!isDependency) {
+      if (Object.keys(rules).length > 0) {
+        updateDatabaseRules(rules);
+      }
+      installNpmDependencies(() => {
+        console.log(
+          `\n${moduleName}`.yellow + ` succesfully installed!\n`.yellow
+        );
+      });
+    } else {
+      callback &&
+        callback(null, moduleName.cyan + " module installed as a dependency");
+    }
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 //download npm contents and unzip into temp directory
@@ -165,12 +158,14 @@ function getModuleFiles(moduleName, tempFolder, devPath) {
     silent: true
   });
   if (stderr && stderr.startsWith("npm ERR!")) {
-    return console.error(
-      "Error downloading the ".red +
-        moduleName.cyan +
-        " module.  ".red +
-        `\nEnsure it exists on npm: https://www.npmjs.com/search?q=combust-${moduleName}`
-    );
+    return new Promise((res, reject) => {
+      reject(
+        "Error downloading the ".red +
+          moduleName.cyan +
+          " module.  ".red +
+          `\nEnsure it exists on npm: https://www.npmjs.com/search?q=combust-${moduleName}`
+      );
+    });
   }
 
   let tgzFile = stdout.trim();
@@ -688,7 +683,9 @@ function applyBaseCloudFunctions() {
 }
 
 function deployCloudFunctions() {
-  console.log("Deploying new cloud functions.. this may take a minute..".green);
+  console.log(
+    "\nDeploying new cloud functions.. this may take a minute..".green
+  );
   shell.exec("firebase deploy --only functions");
 }
 
