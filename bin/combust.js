@@ -70,5 +70,5 @@ require("yargs") // eslint-disable-line
     }
   )
   .demand(1, "must provide a valid command")
-  .help("h")
-  .alias("h", "help").argv;
+  .alias("h", "help")
+  .alias("v", "version").argv;
