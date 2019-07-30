@@ -8,7 +8,7 @@
   "author": "",
   "license": "ISC",
   "bin": {
-    "cb": "bin/combust.js",
+    "com": "bin/combust.js",
     "combust": "bin/combust.js"
   },
   "dependencies": {
