@@ -34,24 +34,13 @@ async function install(moduleName, isDependency, callback) {
   moduleName = moduleName.toLowerCase();
   const projectType = getProjectType();
   isDualProject = projectType === "dual";
-
-  const firstCap = moduleName.charAt(0).toUpperCase() + moduleName.substring(1);
   const storePath = isDualProject ? `shared/stores/` : `src/stores/`;
   const dbPath = isDualProject ? `shared/db` : `src/db/`;
 
-  if (
-    fs.existsSync(storePath + firstCap + "Store.js") ||
-    fs.existsSync(storePath + firstCap + "s" + "Store.js") ||
-    fs.existsSync(
-      storePath + firstCap.substring(0, firstCap.length - 1) + "Store.js"
-    ) ||
-    fs.existsSync(`functions/api/${determineApiFileName(moduleName)}Api.js`)
-  ) {
-    //TODO: check if module is installed (in a less shitty way than this^)
-    if (!isDependency) {
-      return console.error(`${moduleName} module already installed`.red);
-    }
-    return callback(null, "ALREADY_INSTALLED"); //dependency already installed
+  if (checkIfModuleAlreadyInstalled({ moduleName, storePath, isDependency })) {
+    return isDependency
+      ? callback(null, "ALREADY_INSTALLED")
+      : console.error(`${moduleName} module already installed`.red);
   }
 
   const tmpObj = tmp.dirSync();
@@ -66,18 +55,36 @@ async function install(moduleName, isDependency, callback) {
     );
 
     let instructions = JSON.parse(jsonData);
+    let {
+      cloudFunctions,
+      componentsPath,
+      dependencies,
+      installedIfExists
+    } = instructions;
+
+    if (
+      installedIfExists &&
+      checkIfModuleAlreadyInstalled({ installedIfExists })
+    ) {
+      return isDependency
+        ? callback(null, "ALREADY_INSTALLED")
+        : console.error(`${moduleName} module already installed`.red);
+    }
+
     addNpmDependenciesToQue(instructions, projectType);
-    await downloadDependencies(instructions.dependencies);
-    const cloudFunctionsExist = instructions.cloudFunctions ? true : false;
+    await downloadDependencies(dependencies);
+
+    const cloudFunctionsExist = cloudFunctions ? true : false;
     if (cloudFunctionsExist && !fs.existsSync("./functions/index.js")) {
       applyBaseCloudFunctions();
     }
+
     const componentsExist = fs.existsSync(`${tempFolder}/package/components/`);
     const storesExist = fs.existsSync(`${tempFolder}/package/stores/`);
     const dbExists = fs.existsSync(`${tempFolder}/package/db/`);
-    const componentsPath = componentsExist
-      ? `src/components/${moduleName}`
-      : null;
+    componentsPath =
+      componentsPath ||
+      (componentsExist ? `src/components/${moduleName}` : null);
 
     if (isDualProject) {
       ["web", "mobile"].forEach(platform => {
@@ -92,6 +99,7 @@ async function install(moduleName, isDependency, callback) {
       componentsPath && mkdirSync(componentsPath);
       cloudFunctionsExist && mkdirSync("functions/api");
     }
+
     //extract files we need and move to src
     storesExist &&
       shell.exec(`mv -v ${tempFolder}/package/stores/* ${storePath}`, {
@@ -122,9 +130,7 @@ async function install(moduleName, isDependency, callback) {
       const storeFile = fs.readdirSync(storePath)[0];
       updateCombustConfig(storeFile);
     }
-    if (cloudFunctionsExist) {
-      deployCloudFunctions();
-    }
+    if (cloudFunctionsExist) deployCloudFunctions();
     if (!isDependency) {
       if (Object.keys(rules).length > 0) {
         updateDatabaseRules(rules);
@@ -694,4 +700,33 @@ function determineApiFileName(moduleName) {
       (s, name, i) =>
         (name += i === 0 ? s : s.charAt(0).toUpperCase() + s.slice(1))
     );
+}
+
+//TODO: check if module is installed (in a less shitty way than this^)
+function checkIfModuleAlreadyInstalled({
+  moduleName,
+  storePath,
+  installedIfExists
+}) {
+  if (installedIfExists) {
+    // combust module explicitly states files to check
+    for (let i = 0; i < installedIfExists.length; i++) {
+      if (fs.existsSync(installedIfExists[i])) return true;
+    }
+  } else {
+    // make some guesses on files to check
+    const firstCap =
+      moduleName.charAt(0).toUpperCase() + moduleName.substring(1);
+    if (
+      fs.existsSync(storePath + firstCap + "Store.js") ||
+      fs.existsSync(storePath + firstCap + "s" + "Store.js") ||
+      fs.existsSync(
+        storePath + firstCap.substring(0, firstCap.length - 1) + "Store.js"
+      ) ||
+      fs.existsSync(`functions/api/${determineApiFileName(moduleName)}Api.js`)
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
