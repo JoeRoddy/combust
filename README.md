@@ -7,7 +7,7 @@ Combust is a command line tool for rapidly creating and prototyping serverless w
 Due to [an issue](https://github.com/nodejs/node-gyp/issues/454) with node-gyp, we'll need to execute a funky install command.
 
 ```sh
-sudo npm i --unsafe-perm -g combust --allow-root
+sudo npm i -g combust --unsafe-perm --allow-root
 ```
 
 ## Setting up
