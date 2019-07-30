@@ -389,11 +389,7 @@ function executeInstallInstructions(installInstructions, dualProjectPlatform) {
   const pathPrefix = dualProjectPlatform ? `${dualProjectPlatform}/` : "";
   installInstructions &&
     Object.keys(installInstructions).forEach(path => {
-      const pathSuffix = path.startsWith("**")
-        ? path.substring(2)
-        : `src/${path}`;
-      // src/${path} ||  mobile/src/${path} ||  web/src/${path}
-      const filePath = `${pathPrefix}${pathSuffix}`;
+      const filePath = `${pathPrefix}${path}`;
       let file = fs.readFileSync(filePath);
       const fileInstructions = installInstructions[path];
       Object.keys(fileInstructions).forEach(operation => {
