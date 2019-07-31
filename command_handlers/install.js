@@ -395,11 +395,8 @@ function executeInstallInstructions(installInstructions, dualProjectPlatform) {
   installInstructions &&
     Object.keys(installInstructions).forEach(path => {
       const filePath = `${pathPrefix}${path}`;
-      console.log("instruc:", installInstructions);
-
       let file = fs.readFileSync(filePath);
       const fileInstructions = installInstructions[path];
-
       Object.keys(fileInstructions).forEach(operation => {
         const linesToInsert = fileInstructions[operation];
         if (linesToInsert.pattern && /^win/.test(process.platform)) {
