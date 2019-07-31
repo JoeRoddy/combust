@@ -101,10 +101,13 @@ async function install(moduleName, isDependency, callback) {
     }
 
     //extract files we need and move to src
-    storesExist &&
+    if (storesExist) {
+      const storeFile = fs.readdirSync(`${tempFolder}/package/stores/`)[0];
+      updateStoresInit(storeFile);
       shell.exec(`mv -v ${tempFolder}/package/stores/* ${storePath}`, {
         silent: true
       });
+    }
     dbExists &&
       shell.exec(`mv -v ${tempFolder}/package/db/* ${dbPath}`, {
         silent: true
@@ -126,10 +129,6 @@ async function install(moduleName, isDependency, callback) {
 
     shell.exec(`rm -rf ${tempFolder}`);
 
-    if (storesExist) {
-      const storeFile = fs.readdirSync(storePath)[0];
-      updateCombustConfig(storeFile);
-    }
     if (cloudFunctionsExist) deployCloudFunctions();
     if (!isDependency) {
       if (Object.keys(rules).length > 0) {
@@ -233,6 +232,9 @@ function downloadDependencies(dependencies) {
     typeof dependencies !== "undefined" && dependencies
       ? Object.keys(dependencies)
       : [];
+
+  console.log("downloading module deps:");
+  console.log(dependencyArr);
 
   return new Promise((resolve, reject) => {
     if (dependencyArr.length === 0) {
@@ -393,11 +395,14 @@ function updateDatabaseRules(rules) {
  */
 function executeInstallInstructions(installInstructions, dualProjectPlatform) {
   const pathPrefix = dualProjectPlatform ? `${dualProjectPlatform}/` : "";
+  console.log("instruc:");
+  console.log(installInstructions);
   installInstructions &&
     Object.keys(installInstructions).forEach(path => {
       const filePath = `${pathPrefix}${path}`;
       let file = fs.readFileSync(filePath);
       const fileInstructions = installInstructions[path];
+
       Object.keys(fileInstructions).forEach(operation => {
         const linesToInsert = fileInstructions[operation];
         if (linesToInsert.pattern && /^win/.test(process.platform)) {
@@ -477,7 +482,7 @@ function installNpmDependenciesForPlatform(platform, callback) {
   );
 }
 
-function updateCombustConfig(storeName) {
+function updateStoresInit(storeName) {
   const filePath = `${isDualProject ? "shared" : "src"}/.combust/init.js`;
   let firstCap = storeName.substring(0, storeName.length - 3);
   let lowered = firstCap;
@@ -520,7 +525,6 @@ function replaceCode(file, patternAndCode) {
     const { pattern, code } = pAndC;
     file = file.replace(pattern, getCodeStrFromArr(code));
   });
-
   return file;
 }
 
