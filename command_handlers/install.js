@@ -307,7 +307,7 @@ function getDefaultInstallInstrucForMobile(moduleName) {
   const lowered = moduleName.charAt(0).toLowerCase() + moduleName.substring(1);
 
   return {
-    "components/Routes.js": {
+    "components/app/Routes.js": {
       imports: [`import ${capped} from "./${lowered}/${capped}";`],
       after: {
         pattern: "const COMBUST_SCREENS = {",
@@ -713,13 +713,11 @@ function checkIfModuleAlreadyInstalled({
     }
   } else {
     // make some guesses on files to check
-    const firstCap =
-      moduleName.charAt(0).toUpperCase() + moduleName.substring(1);
     if (
-      fs.existsSync(storePath + firstCap + "Store.js") ||
-      fs.existsSync(storePath + firstCap + "s" + "Store.js") ||
+      fs.existsSync(`${storePath}${moduleName}Store.js`) ||
+      fs.existsSync(`${storePath}${moduleName}sStore.js`) ||
       fs.existsSync(
-        storePath + firstCap.substring(0, firstCap.length - 1) + "Store.js"
+        `${storePath}${moduleName.substring(0, moduleName.length - 1)}Store.js`
       ) ||
       fs.existsSync(`functions/api/${determineApiFileName(moduleName)}Api.js`)
     ) {

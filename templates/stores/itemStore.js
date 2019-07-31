@@ -1,7 +1,7 @@
 import { observable, computed } from "mobx";
 
-import itemDb from "../db/ItemDb";
-import userStore from "./UserStore";
+import itemDb from "../db/itemDb";
+import userStore from "./userStore";
 
 class ItemStore {
   subscribeToEvents() {

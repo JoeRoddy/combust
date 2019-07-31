@@ -123,8 +123,9 @@ const createFiles = function(moduleTitle, fieldsAndVals, projectType) {
 
               data = replaceTitleOccurrences(singularTitle, data);
               data = insertFieldsAndDefaultVals(data, fieldsAndVals);
-              const fileName = file.replace("Item", capped);
 
+              let fileName = file.replace("item", singularTitle);
+              fileName = fileName.replace("Item", capped);
               const fileDestinationPath = `${destinationFolder}/${fileName}`;
 
               fs.writeFile(fileDestinationPath, data, err => {
@@ -188,11 +189,11 @@ const addNewRoutes = function(moduleTitle, projectType) {
 
 const getInstructionsForWebRoutes = function(capped, lowered) {
   return {
-    "src/components/Routes.jsx": {
+    "src/components/app/Routes.jsx": {
       imports: [
-        `import ${capped}s from "./${lowered}s/${capped}s";`,
-        `import Create${capped} from "./${lowered}s/Create${capped}";`,
-        `import ${capped} from './${lowered}s/${capped}';`
+        `import ${capped}s from "../${lowered}s/${capped}s";`,
+        `import Create${capped} from "../${lowered}s/Create${capped}";`,
+        `import ${capped} from '../${lowered}s/${capped}';`
       ],
       renderEnd: [
         `<Route path="/${lowered}sByUser/:userId" component={${capped}s} />`,
@@ -200,7 +201,7 @@ const getInstructionsForWebRoutes = function(capped, lowered) {
         `<Route path="/${lowered}/:${lowered}Id" component={${capped}} />`
       ]
     },
-    "src/components/Navbar.jsx": {
+    "src/components/app/Navbar.jsx": {
       after: {
         pattern: "const additionalLinks = [",
         code: [
@@ -213,11 +214,11 @@ const getInstructionsForWebRoutes = function(capped, lowered) {
 
 const getInstructionsForMobileRoutes = function(capped, lowered) {
   return {
-    "src/components/Routes.js": {
+    "src/components/app/Routes.js": {
       imports: [
-        `import ${capped}s from "./${lowered}s/${capped}s";`,
-        `import Create${capped} from "./${lowered}s/Create${capped}";`,
-        `import ${capped} from './${lowered}s/${capped}';`
+        `import ${capped}s from "../${lowered}s/${capped}s";`,
+        `import Create${capped} from "../${lowered}s/Create${capped}";`,
+        `import ${capped} from '../${lowered}s/${capped}';`
       ],
       after: {
         pattern: "const COMBUST_SCREENS = {",

@@ -1,7 +1,7 @@
 import React from "react";
 
-import itemStore from "../../stores/ItemStore";
-import userStore from "../../stores/UserStore";
+import itemStore from "../../stores/itemStore";
+import userStore from "../../stores/userStore";
 import Form from "../reusable/Form";
 
 const fields = {};

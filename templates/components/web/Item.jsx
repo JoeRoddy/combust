@@ -2,8 +2,8 @@ import { Link } from "react-router-dom";
 import React, { Component } from "react";
 import { observer } from "mobx-react";
 
-import itemStore from "../../stores/ItemStore";
-import userStore from "../../stores/UserStore";
+import itemStore from "../../stores/itemStore";
+import userStore from "../../stores/userStore";
 import UpdateItem from "./UpdateItem";
 
 const fields = {};

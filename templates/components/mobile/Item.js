@@ -3,8 +3,8 @@ import { observer } from "mobx-react";
 import { StyleSheet, Text, View, Image } from "react-native";
 
 import nav from "../../helpers/NavigatorHelper";
-import itemStore from "../../stores/ItemStore";
-import userStore from "../../stores/UserStore";
+import itemStore from "../../stores/itemStore";
+import userStore from "../../stores/userStore";
 import { Button, Screen } from "../reusable";
 import UpdateItem from "./UpdateItem";
 

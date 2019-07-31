@@ -4,7 +4,7 @@ import { StyleSheet, View, ScrollView } from "react-native";
 import { List, ListItem } from "react-native-elements";
 
 import nav from "../../helpers/NavigatorHelper";
-import itemStore from "../../stores/ItemStore";
+import itemStore from "../../stores/itemStore";
 import { Button, Screen } from "../reusable";
 
 export default (Items = observer(() => {

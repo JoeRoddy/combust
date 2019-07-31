@@ -9,7 +9,7 @@ const getProjectType = () => {
   return fs.existsSync("./shared/.combust")
     ? "dual"
     : //ghetto, replace with some config prop later
-    fs.existsSync("./src/components/Routes.js")
+    fs.existsSync("./src/components/app/Routes.js")
     ? "mobile"
     : "web";
 };
