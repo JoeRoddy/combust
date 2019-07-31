@@ -233,9 +233,6 @@ function downloadDependencies(dependencies) {
       ? Object.keys(dependencies)
       : [];
 
-  console.log("downloading module deps:");
-  console.log(dependencyArr);
-
   return new Promise((resolve, reject) => {
     if (dependencyArr.length === 0) {
       return resolve();
@@ -395,11 +392,11 @@ function updateDatabaseRules(rules) {
  */
 function executeInstallInstructions(installInstructions, dualProjectPlatform) {
   const pathPrefix = dualProjectPlatform ? `${dualProjectPlatform}/` : "";
-  console.log("instruc:");
-  console.log(installInstructions);
   installInstructions &&
     Object.keys(installInstructions).forEach(path => {
       const filePath = `${pathPrefix}${path}`;
+      console.log("instruc:", installInstructions);
+
       let file = fs.readFileSync(filePath);
       const fileInstructions = installInstructions[path];
 

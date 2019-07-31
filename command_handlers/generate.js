@@ -188,7 +188,7 @@ const addNewRoutes = function(moduleTitle, projectType) {
 
 const getInstructionsForWebRoutes = function(capped, lowered) {
   return {
-    "components/Routes.jsx": {
+    "src/components/Routes.jsx": {
       imports: [
         `import ${capped}s from "./${lowered}s/${capped}s";`,
         `import Create${capped} from "./${lowered}s/Create${capped}";`,
@@ -200,7 +200,7 @@ const getInstructionsForWebRoutes = function(capped, lowered) {
         `<Route path="/${lowered}/:${lowered}Id" component={${capped}} />`
       ]
     },
-    "components/Navbar.jsx": {
+    "src/components/Navbar.jsx": {
       after: {
         pattern: "const additionalLinks = [",
         code: [
@@ -213,7 +213,7 @@ const getInstructionsForWebRoutes = function(capped, lowered) {
 
 const getInstructionsForMobileRoutes = function(capped, lowered) {
   return {
-    "components/Routes.js": {
+    "src/components/Routes.js": {
       imports: [
         `import ${capped}s from "./${lowered}s/${capped}s";`,
         `import Create${capped} from "./${lowered}s/Create${capped}";`,
@@ -228,7 +228,7 @@ const getInstructionsForMobileRoutes = function(capped, lowered) {
         ]
       }
     },
-    "components/reusable/SideMenu.js": {
+    "src/components/reusable/SideMenu.js": {
       after: {
         pattern: "const COMBUST_MENU_ITEMS = [",
         code: [
