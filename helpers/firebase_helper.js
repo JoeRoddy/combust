@@ -137,7 +137,7 @@ module.exports = {
 function _getFirebaseConfig() {
   let f;
   try {
-    f = fs.readFileSync("src/.combust/firebase.config.json").toString();
+    f = fs.readFileSync("src/db/firebase.config.json").toString();
   } catch (err) {
     throw nonCombustAppErr;
   }

@@ -25,7 +25,7 @@ const nonCombustAppErr =
 const getConfiguredFirebaseProjectId = () => {
   const firebaseConfigPath = `./${
     getProjectType() === "dual" ? "shared" : "src"
-  }/.combust/firebase.config.json`;
+  }/db/firebase.config.json`;
   const content = fs.readFileSync(firebaseConfigPath, "utf8");
   const firebaseConfig = JSON.parse(content);
   return firebaseConfig ? firebaseConfig.projectId : null;

@@ -80,20 +80,16 @@ writeOutputToFirebaseConfig = stdout => {
 
   console.log(
     "\nApplied new configuration to: " +
-      "src/.combust/firebase.config.json".green +
+      "src/db/firebase.config.json".green +
       "\n\nAwesome! Firebase should be all hooked up!".yellow
   );
 };
 
 writeConfigToFile = newConfig => {
   const topLevelDir = getProjectType() === "dual" ? "shared" : "src";
-  fs.writeFile(
-    `./${topLevelDir}/.combust/firebase.config.json`,
-    newConfig,
-    err => {
-      err && console.log("err updating config:" + err);
-    }
-  );
+  fs.writeFile(`./${topLevelDir}/db/firebase.config.json`, newConfig, err => {
+    err && console.log("err updating config:" + err);
+  });
 };
 
 //OLD WAY - might be necessary to use the api later
