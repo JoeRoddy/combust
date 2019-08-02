@@ -103,7 +103,7 @@ async function install(moduleName, isDependency, callback) {
     //extract files we need and move to src
     if (storesExist) {
       const storeFile = fs.readdirSync(`${tempFolder}/package/stores/`)[0];
-      updateStoresInit(storeFile);
+      addStoreToInitFile(storeFile);
       shell.exec(`mv -v ${tempFolder}/package/stores/* ${storePath}`, {
         silent: true
       });
@@ -474,18 +474,16 @@ function installNpmDependenciesForPlatform(platform, callback) {
   );
 }
 
-function updateStoresInit(storeName) {
-  const filePath = `${isDualProject ? "shared" : "src"}/.combust/init.js`;
-  let firstCap = storeName.substring(0, storeName.length - 3);
-  let lowered = firstCap;
-  lowered = lowered.charAt(0).toLowerCase() + lowered.substring(1);
+function addStoreToInitFile(storeName) {
+  const filePath = `${isDualProject ? "shared" : "src"}/stores/init.js`;
+  const jsExtClipped = storeName.substring(0, storeName.length - 3);
+  const lowerCase =
+    jsExtClipped.charAt(0).toLowerCase() + jsExtClipped.substring(1);
   let file = fs.readFileSync(filePath);
-  file = insertImports(file, [
-    `import ${lowered} from "../stores/${firstCap}"`
-  ]);
+  file = insertImports(file, [`import ${lowerCase} from "./${lowerCase}"`]);
   file = insertAfter(file, {
     pattern: `stores = {${/^win/.test(process.platform) ? "\r" : "\n"}`,
-    code: [`\t${lowered},`]
+    code: [`\t${lowerCase},`]
   });
   fs.writeFileSync(filePath, file);
 }
@@ -568,7 +566,8 @@ function insertAtEndOfFile(file, code) {
 module.exports = {
   install,
   executeInstallInstructions,
-  updateDatabaseRules
+  updateDatabaseRules,
+  addStoreToInitFile
 };
 
 String.prototype.replaceAll = function(search, replacement) {

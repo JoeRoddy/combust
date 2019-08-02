@@ -3,7 +3,8 @@ const ncp = require("ncp");
 
 const {
   executeInstallInstructions,
-  updateDatabaseRules
+  updateDatabaseRules,
+  addStoreToInitFile
 } = require("../command_handlers/install.js");
 const {
   isCurrentDirCombustApp,
@@ -133,6 +134,9 @@ const createFiles = function(moduleTitle, fieldsAndVals, projectType) {
                   err ? "err updating file:" + err : "created file: " + fileName
                 );
               });
+              if (folder === "stores/") {
+                addStoreToInitFile(fileName);
+              }
             });
           });
       });
