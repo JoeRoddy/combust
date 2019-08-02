@@ -331,9 +331,7 @@ function getDefaultInstallInstrucForMobile(moduleName) {
 
 function updateDatabaseRules(rules) {
   const isDual = getProjectType() === "dual";
-  const dbRulesPath = `./${
-    isDual ? "shared" : "src"
-  }/.combust/database.rules.json`;
+  const dbRulesPath = `./config/firebase/database.rules.json`;
   let dirtyJson = fs.readFileSync(dbRulesPath, "utf8");
   let rulesFile = JSON.parse(stripJsonComments(dirtyJson));
   let currentRules = rulesFile.rules;
@@ -350,9 +348,9 @@ function updateDatabaseRules(rules) {
   //save & publish
   const rulesContent = JSON.stringify(rulesFile, null, 2);
   fs.writeFileSync(dbRulesPath, rulesContent);
-  if (isDual) {
-    fs.writeFileSync(`./web/src/.combust/database.rules.json`, rulesContent);
-  }
+  // if (isDual) {
+  //   fs.writeFileSync(`./web/src/.combust/database.rules.json`, rulesContent);
+  // }
 
   const projectId = getConfiguredFirebaseProjectId();
   if (!projectId)
