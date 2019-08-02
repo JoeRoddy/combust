@@ -24,7 +24,6 @@ cloneAndInstallProject = async (projectType, projectTitle, dualPlatFolder) => {
     : projectTitle;
 
   cloneRepo(repos[projectType], projectTitle, dualPlatFolder);
-  projectType !== DUAL_PLATFORM && createFirebaseAvailAppFile(projectPath);
   await npmInstall(projectPath);
 
   if (projectType === DUAL_PLATFORM) {
@@ -51,17 +50,6 @@ npmInstall = path => {
       }
     );
   });
-};
-
-createFirebaseAvailAppFile = async projectPath => {
-  let projects = await getFirebaseProjects(true);
-  fs.writeFile(
-    `${projectPath}/src/.combust/availApps.json`,
-    JSON.stringify(projects),
-    err => {
-      if (err) throw err;
-    }
-  );
 };
 
 createDualPlatSubProjects = async projectTitle => {
