@@ -6,7 +6,7 @@ ncp.limit = 16;
 
 const getProjectType = () => {
   if (!isCurrentDirCombustApp()) throw nonCombustAppErr;
-  return fs.existsSync("./shared/.combust")
+  return fs.existsSync("./shared/config")
     ? "dual"
     : //ghetto, replace with some config prop later
     fs.existsSync("./src/components/app/Routes.js")
@@ -15,7 +15,7 @@ const getProjectType = () => {
 };
 
 const isCurrentDirCombustApp = () => {
-  return fs.existsSync("./src/.combust") || fs.existsSync("./shared/.combust");
+  return fs.existsSync("./config/firebase") || fs.existsSync("./shared/config");
 };
 
 const nonCombustAppErr =
